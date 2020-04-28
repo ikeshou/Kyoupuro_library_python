@@ -11,6 +11,8 @@ Eratos:
         O(nlglgn) で初期化、num までの素数判定テーブルを作る
     is_prime(n):
         O(1) で素数かどうか判定する
+    prime_factorize(n):
+        O(√n) (候補の素数を列挙するところが律速) で素因数分解を行う
 
 euclid_gcd(a, b):
     O(lgn)
@@ -37,16 +39,13 @@ combination(n, r, m):
 import math
 def is_prime(num):
     """
-    >>> is_prime(1)
-    False
-    >>> is_prime(2)
-    True
     >>> is_prime(1000000007)
     True
     """
+    assert(num >= 1)
     if num == 2:
         return True
-    if num < 2 or num % 2 == 0:    # 下で定数倍高速化できる
+    if num == 1 or num % 2 == 0:    # 下で定数倍高速化できる
         return False
     i = 3
     while i <= int(math.sqrt(num)):
@@ -58,22 +57,59 @@ def is_prime(num):
 
 class Eratos:
     def __init__(self, num):
-        self.prime = [False if i == 0 or i == 1 else True for i in range(num+1)]
-        for i in range(2, int(math.sqrt(num))+1):
-            if self.prime[i]:
-                p = i
-                j = i ** 2    # p**2 からスタートすることで定数倍高速化できる
-                while j <= num:
-                    self.prime[j] = False
-                    j += p
+        assert(num >= 1)
+        self.table_max = num
+        # self.table[i] は i が素数かどうかを示す (bool)
+        self.table = [False if i == 0 or i == 1 else True for i in range(num+1)]
+        for i in range(2, int(math.sqrt(num)) + 1):
+            if self.table[i]:
+                for j in range(i ** 2, num + 1, i):    # i**2 からスタートすることで定数倍高速化できる
+                    self.table[j] = False
+        # self.table_max 以下の素数を列挙したリスト
+        self.prime_numbers = [2] if self.table_max >= 2 else []
+        for i in range(3, self.table_max + 1, 2):
+            if self.table[i]:
+                self.prime_numbers.append(i)
     
     def is_prime(self, num):
         """
         >>> e = Eratos(100)
-        >>> [i for i in range(101) if e.is_prime(i)]
+        >>> [i for i in range(1, 101) if e.is_prime(i)]
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
         """
-        return self.prime[num]
+        assert(num >= 1)
+        if num > self.table_max:
+            raise ValueError('Eratos.is_prime(): exceed table_max({}). got {}'.format(self.table_max, num))
+        return self.table[num]
+    
+    def prime_factorize(self, num):
+        """
+        >>> e = Eratos(10000)
+        >>> e.prime_factorize(6552)
+        {2: 3, 3: 2, 7: 1, 13: 1}
+        """
+        assert(num >= 1)
+        if num > self.table_max:
+            raise ValueError('Eratos.prime_factorize(): exceed table_max({}). got {}'.format(self.table_max, num))
+        factorized_dict = dict()    # 素因数分解の結果を記録する辞書
+        candidate_prime_numbers = [i for i in range(2, int(math.sqrt(num)) + 1) if self.is_prime(i)]
+        # n について、√n 以下の素数で割り続けると最後には 1 or 素数となる
+        # 背理法を考えれば自明 (残された数が √n より上の素数の積であると仮定。これは自明に n を超えるため矛盾)
+        for p in candidate_prime_numbers:
+            # これ以上調査は無意味
+            if num == 1:
+                break
+            while num % p == 0:
+                num //= p
+                try:
+                    factorized_dict[p]
+                except KeyError:
+                    factorized_dict[p] = 0
+                finally:
+                    factorized_dict[p] += 1
+        if num != 1:
+            factorized_dict[num] = 1
+        return factorized_dict
 # =======================
 
 
@@ -180,3 +216,34 @@ def combination(n, r, mod):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+
+    # check the corner cases!
+    assert(is_prime(1) == False)
+    assert(is_prime(2) == True)
+    assert(is_prime(3) == True)
+
+    e_1 = Eratos(1)
+    assert(e_1.is_prime(1) == False)
+    assert(e_1.prime_numbers == [])
+    assert(e_1.prime_factorize(1) == {})
+    e_2 = Eratos(2)
+    assert(e_2.is_prime(1) == False)
+    assert(e_2.is_prime(2) == True)
+    assert(e_2.prime_numbers == [2])
+    assert(e_2.prime_factorize(1) == {})
+    assert(e_2.prime_factorize(2) == {2: 1})
+    e_3 = Eratos(3)
+    assert(e_3.is_prime(1) == False)
+    assert(e_3.is_prime(2) == True)
+    assert(e_3.is_prime(3) == True)
+    assert(e_3.prime_numbers == [2, 3])
+    assert(e_3.prime_factorize(1) == {})
+    assert(e_3.prime_factorize(2) == {2: 1})
+    assert(e_3.prime_factorize(3) == {3: 1})   
+
+    assert(combination(1, 0, 10**9+7) == 1)
+    assert(combination(100, 0, 10**9+7) == 1)
+    assert(combination(1, 1, 10**9+7) == 1)
+    assert(combination(100, 1, 10**9+7) == 100)
+
+    print(" * assertion test ok * ")
