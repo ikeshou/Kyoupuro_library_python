@@ -1,5 +1,6 @@
 # Kyoupuro_library_python
 Python libraries for programming competition
+
 Useful and typical algorithms and data structures that are not covered with Python's built-in libraries are implemented.
 
 
