@@ -73,7 +73,6 @@ class TrieHashNode:
             current = current.parent
 
 
-
 class TrieHashTree:
     def __init__(self):
         self.root = TrieHashNode()    # 色々書き込まれることはあるがその値に意味はない

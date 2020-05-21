@@ -25,6 +25,9 @@ a-z で 36 個。|s| = O(10^5) とかだと 36^(10^5) で 10^100000 とかにな
 独立に N 個の値をとる変数があったときどれかが一致する確率が 50 % を超えるのに必要な変数の個数は約 √N 個であるから (誕生日のパラドックス)、
 10^5 個のハッシュ計算で半分以上の確率でかぶらないようにするには 10^10 個の値をハッシュ関数が生成しうるようにする必要がある。32 bit 整数では足りないので 64 bit 整数で mod を用意する。
 なお、hack によるロリハ撃墜を避けるために base をランダム生成する戦略を取っている。
+
+
+verified @ABC141_e
 """
 
 
@@ -38,6 +41,9 @@ class RollingHash:
         self.hash_list = self._make_rolling_hash_list()
 
     def _make_rolling_hash_list(self):
+        """
+        累積文字列のハッシュ値を記録したテーブルの作成を行う (O(n))
+        """
         hash_list = [0] * (self.size + 1)    # [h(s[0:0]), h(s[0:1]), h(s[0:2]), h(s[0:3]), ..., h(s[0:size])]
         prev = 0
         for i in range(1, self.size + 1):
@@ -46,24 +52,37 @@ class RollingHash:
             prev = hash_num
         return hash_list
 
-    def calc_hash(self, pattern):
+    def calc_str_hash(self, pattern):
         """
+        文字列パターンのハッシュ値の計算を行う (O(L))
         Args:
             pattern (str)
         Returns:
             hash_num (int)
         """
-        n = len(pattern)
+        length = len(pattern)
         hash_num = 0
-        for i in range(n):
-            hash_num = (hash_num + ord(pattern[i]) * pow(self.base, n-1-i, self.hashmod)) % self.hashmod
+        for i in range(length):
+            hash_num = (hash_num + ord(pattern[i]) * pow(self.base, length - 1 - i, self.hashmod)) % self.hashmod
         return hash_num
+    
+    def calc_interval_hash(self, i, j):
+        """
+        s[i:j] のハッシュ値の計算を行う (O(1))
+        Args:
+            i (int): 左の閉区間
+            j (int): 右の開区間
+        Returns:
+            hash_ium (int)
+        """
+        return (self.hash_list[j] - self.hash_list[i] * pow(self.base, j - i, self.hashmod)) % self.hashmod
     
     def match_predict_with_interval(self, hashed_pattern, i, j):
         """
-        [i,j), つまり s[i:j] が hashed_pattern と一致するかどうかを O(1) で判定する
+        [i,j), つまり s[i:j] が hashed_pattern と一致するかどうかを判定する (O(1))
+        pattern ではなく hashed_pattern であることに注意。
         Args:
-            hashed_pattern (int): self.calc_hash() で計算された文字列のハッシュ値
+            hashed_pattern (int): self.calc_str_hash() で計算された文字列のハッシュ値
             i (int): 左の閉区間
             j (int): 右の開区間
         Returns:
@@ -73,7 +92,7 @@ class RollingHash:
             raise IndexError(f'interval should be [i, j) (i <= j). got i: {i} and j: {j}')
         if not isinstance(hashed_pattern, int) or not 0 <= hashed_pattern <= self.hashmod - 1:
             raise ValueError(f'argument must be hashed_pattern (positive integer that is less than {self.hashmod}). got {hashed_pattern}')
-        return hashed_pattern == (self.hash_list[j] - self.hash_list[i] * (self.base ** (j - i))) % self.hashmod
+        return hashed_pattern == self.calc_interval_hash(i, j)
     
     def find_all(self, target_s):
         """
@@ -90,7 +109,7 @@ class RollingHash:
             iter: マッチした全ての s[i:j] について、 (i, j) のタプルを返すようなイテレータ
         """
         n = len(target_s)
-        hashed_target_s = self.calc_hash(target_s)
+        hashed_target_s = self.calc_str_hash(target_s)
         ans = []
         for i in range(self.size - n + 1):
             if self.match_predict_with_interval(hashed_target_s, i, i + n):

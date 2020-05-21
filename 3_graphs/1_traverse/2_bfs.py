@@ -39,10 +39,11 @@ def bfs_queue_traverse(u):
     queue = deque([u])
     while queue:
         current = queue.popleft()
-        visited[current] = True
-        for v in adjacent_list[current]:
-            if not visited[v]:
-                queue.append(v)
+        if not visited[current]:
+            visited[current] = True
+            for v in adjacent_list[current]:
+                if not visited[v]:
+                    queue.append(v)
 
 
 

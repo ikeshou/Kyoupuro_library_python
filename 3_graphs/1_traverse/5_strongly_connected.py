@@ -9,7 +9,7 @@
 
 algorithm
 DFS(G) を行い、帰りがけの順の順序をメモ
-その順をもとに DFS(transpose(G)) を行う。各 DFS が停止するごとに強連結成分が生成される。生成される順は DAG のトポロジカル順となる。
+その降順をもとに DFS(transpose(G)) を行う。各 DFS が停止するごとに強連結成分が生成される。生成される順は DAG のトポロジカル順となる。
 """
 
 
@@ -18,6 +18,12 @@ def scc(graph, rgraph):
     graph, rgraph をもとに強連結成分ごとのグルーピングを行う。
     グループ番号は 0 から始まり、その順が強連結成分分解後の DAG におけるトポロジカル順序を表す。
     グループ数、グループ番号を各頂点に対し記したリストを返す。
+    Args:
+        graph (list): 隣接リスト
+        rgraph (list): 有向辺を逆に繋いだグラフの隣接リスト
+    Returns:
+        group_numbers (int): トータルのグループ (強連結成分) 数
+        vertex_to_group_num (list): vertex_to_group_num[i] には i がどのグループ番号で表されるグループに属するかが int で入っているリスト
     """
     n = len(graph)
     order = []
@@ -28,10 +34,10 @@ def scc(graph, rgraph):
             if not visited[v]:
                 dfs(v)
         order.append(current)
-    group = [0] * n
+    vertex_to_group_num = [0] * n
     def rdfs(u, group_num):
         visited[u] = True
-        group[u] = group_num
+        vertex_to_group_num[u] = group_num
         for v in rgraph[u]:
             if not visited[v]:
                 rdfs(v, group_num)
@@ -48,19 +54,28 @@ def scc(graph, rgraph):
             cnt += 1
             rdfs(j, cnt)
     # 0 ... cnt までがグループ番号として使用されている。
-    return cnt+1, group
+    return cnt+1, vertex_to_group_num
             
     
-def contract_from_group(graph, group_num, group):
+def contract_from_group(graph, group_num, vertex_to_group_num):
+    """
+    Args:
+        graph (list): 隣接リスト
+        group_num (int): トータルのグループ (強連結成分) 数
+        vertex_to_group_num (list): vertex_to_group_num[i] には i がどのグループ番号で表されるグループに属するかが int で入っているリスト
+    Returns:
+        DAG (list): DAG[k] にはグループ番号 k から辺が伸びているグループの番号の set が入っているリスト
+        strongly_connected (list): strongly_connected[k] にはグループ番号 k の強連結成分内の頂点のリストが入っているリスト
+    """
     n = len(graph)  
-    DAG = [set() for _ in range(group_num)]    # どのグループがどのグループと接続しているか
-    strongly_connected = [[] for _ in range(group_num)]   # strongly_connected[i] => グループ番号 i の強連結成分内の頂点のリスト
+    DAG = [set() for _ in range(group_num)]
+    strongly_connected = [[] for _ in range(group_num)]
     for u in range(n):
         for v in graph[u]:
-            if group[u] != group[v]:
-                DAG[group[u]].add(group[v])
+            if vertex_to_group_num[u] != vertex_to_group_num[v]:
+                DAG[vertex_to_group_num[u]].add(vertex_to_group_num[v])
             else:
-                strongly_connected[group[u]].append(v)
+                strongly_connected[vertex_to_group_num[u]].append(v)
     return DAG, strongly_connected
 
 
@@ -79,13 +94,14 @@ if __name__ == "__main__":
         for j in elm:
             reverse_adj_list[j].append(i)
     
-    group_num, group = scc(adjacent_list, reverse_adj_list)
-    print(group_num)    # 4
-    print(group)    # [0, 0, 1, 1, 0, 2, 2, 3]
-    print("")
+    # main program
+    group_num, vertex_to_group_num = scc(adjacent_list, reverse_adj_list)
+    assert(group_num == 4)
+    assert(vertex_to_group_num == [0, 0, 1, 1, 0, 2, 2, 3])
     
-    DAG, strongly_connected = contract_from_group(adjacent_list, group_num, group)
-    print(DAG)    # [{1, 2}, {2, 3}, {3}, set()]
-    print(strongly_connected)    # [[1, 4, 0], [3, 2], [6, 5], [7]]
+    DAG, strongly_connected = contract_from_group(adjacent_list, group_num, vertex_to_group_num)
+    assert(DAG == [{1, 2}, {2, 3}, {3}, set()])
+    assert(strongly_connected == [[1, 4, 0], [3, 2], [6, 5], [7]])
 
+    print(" * assertion test ok * ")
 

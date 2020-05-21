@@ -19,12 +19,18 @@ akin_num: O(1)
 
 class UnionFindTree:
     def __init__(self, num_of_elm):
+        """
+        0 ... num_of_elem - 1 まで数字で表される (0-index) グループを管理する union find tree を作成する (O(n))
+        """
         self.n = num_of_elm
-        self.table = [i for i in range(self.n)]
-        self.rank = [0] * self.n
-        self.group_size = [1] * self.n
+        self.table = [i for i in range(self.n)]    # table[ind] は ind の親の index を表す。ind == table[ind] の時そのグループの root である。
+        self.rank = [0] * self.n    # root となる ind について rank[ind] はその木の深さを表す。それ以外の ind については意味を持たない。
+        self.group_size = [1] * self.n    # root となる ind について group_size[ind] はそのグループに属するメンバの個数を表す。それ以外の ind については意味を持たない。
     
     def _find_set(self, x):
+        """
+        x の属するグループ番号を O(α(n)) で求める
+        """
         parent = self.table[x]
         if x == parent:
             return x
@@ -35,9 +41,15 @@ class UnionFindTree:
             return root
     
     def is_same(self, x, y):
+        """
+        x と y が同じグループに属するか O(α(n)) で判定する
+        """
         return self._find_set(x) == self._find_set(y)
 
     def union(self, x, y):
+        """
+        x と y の属するグループを O(α(n)) で統合する
+        """
         shallow_root = self._find_set(x)
         deep_root = self._find_set(y)
         if self.rank[shallow_root] > self.rank[deep_root]:
@@ -55,6 +67,9 @@ class UnionFindTree:
             return True
 
     def akin_num(self, x):
+        """
+        x の属するグループのサイズを O(1) で計算する
+        """
         x_root = self._find_set(x)
         return self.group_size[x_root]
 

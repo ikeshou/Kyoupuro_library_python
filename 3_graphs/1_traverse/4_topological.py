@@ -3,6 +3,7 @@
 BFS (DFS も可能) を用いて DAG をトポロジカルソートする (O(V+E))
 (閉路のない有向グラフについての各有向辺が順方向になるようにソートを行う)
 トポロジカルソートが行える (BFS のアルゴリズムについて、ソートずみグラフの頂点数がもとのグラフの頂点数と一致する) ⇄ DAGである ⇄ この有向グラフは閉路がない
+(閉路検出だけなら 3 の一部分のようにして DFS で order をふって後退辺検出でもいいけれど)
 
 また、DAG の単一始点最短経路問題 (負辺 OK) を求める問題も、
 トポロジカルソート -> その順にコストを緩和 により O(V+E) で計算することが可能！ cf. Bellman-Ford
@@ -40,7 +41,13 @@ DAG ではないときもぶっ壊れたソート結果を返すので
 from collections import deque
 
 def topological_bfs(adj):
-    'グラフをトポロジカルソートしたときの index の並び順を表すリストを返す。この長さが頂点数に一致しない場合は閉路あり。'
+    """
+    グラフをトポロジカルソートしたときの頂点の並び順を表すリストを返す。この長さが頂点数に一致しない場合は閉路あり。
+    Args:
+        adj (list): 隣接リスト
+    Returns:
+        sorted_vertice (list): 有向グラフをトポロジカルソートしたときの頂点の並び順を表すリスト
+    """
     n = len(adj)
     dimensions = [0] * n
     for edge in adj:
@@ -65,7 +72,13 @@ def topological_bfs(adj):
         
     
 def topological_dfs(adj):
-    'グラフをトポロジカルソートしたときの index の並び順を表すリストを返す。グラフは DAG であることが仮定している。'
+    """
+    グラフをトポロジカルソートしたときの index の並び順を表すリストを返す。グラフは DAG であることを仮定している。
+    Args:
+        adj (list): 隣接リスト
+    Returns:
+        sorted_vertice (list): 有向グラフをトポロジカルソートしたときの頂点の並び順を表すリスト    
+    """
     n = len(adj)
     visited = [False] * n    # 複数回 DFS する。前回訪問ずみの頂点を判定し探索先から外す必要がある
     unvisited_indices = set(range(n))   # DFS の際に未訪問の頂点から選択する作業がある。それを O(1) で行いたい
@@ -77,15 +90,12 @@ def topological_dfs(adj):
             if not visited[v]:
                 dfs(v)
         buf.append(current)    # 帰りがけの順で後ろに追加
-    if n == 0:
-        return buf
-    else:
-        while unvisited_indices:
-            start = unvisited_indices.pop()
-            unvisited_indices.add(start)
-            dfs(start)
-        buf.reverse()
-        return buf
+    while unvisited_indices:
+        start = unvisited_indices.pop()
+        unvisited_indices.add(start)
+        dfs(start)
+    buf.reverse()
+    return buf
 
 
 
@@ -97,14 +107,13 @@ if __name__ == "__main__":
                     (5,),
                     tuple())
 
-    print("topological sort by BFS")
     bfs_result = topological_bfs(adjacent_list)
-    print(bfs_result)
-    print(f"DAG?: {len(bfs_result)==len(adjacent_list)}")
-    print("")
-    print("topological sort by DFS")
+    assert(bfs_result == [0, 2, 1, 4, 3, 5])
+    assert(len(bfs_result)==len(adjacent_list))    # DAG である
+    
     dfs_result = topological_dfs(adjacent_list)
-    print(dfs_result)
+    assert(dfs_result == [2, 4, 5, 0, 1, 3])
+    print(" * assertion test ok * ")
     
     
     

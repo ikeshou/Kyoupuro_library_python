@@ -7,7 +7,7 @@ u から DFS を行い、最遠点 v を求める
 diameter = dist(u, v)
 """
 
-def diameter(adj, root):
+def diameter_of_tree(adj, root):
     max_dist = 0
     most_remote_point = -1
     def dfs(u, previous=None, dist=0):
@@ -56,4 +56,4 @@ if __name__ == "__main__":
                      (8,),
                      (9, 14),
                      (13,))
-    print(diameter(adj=adjacent_list, root=0))    # ((14, 11), 9)
+    print(diameter_of_tree(adj=adjacent_list, root=0))    # ((14, 11), 9)

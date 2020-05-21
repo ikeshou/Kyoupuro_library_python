@@ -44,7 +44,6 @@ def dfs_recursive_traverse(u, recursive=False):
             elapsed_time = 0
             visited[i] = False
             time_stamp[i][0] = 0
-            time_stamp[i][0] = 0
     # 彩色をし、タイムスタンプを押す
     visited[u] = True
     elapsed_time += 1

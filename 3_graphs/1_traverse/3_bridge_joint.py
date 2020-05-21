@@ -1,6 +1,6 @@
 """
 <Algorithm Introduction p.222-223>
-DFS と lowlink を用いて橋と関節点を求める (O(V+E))
+無向グラフについて DFS と lowlink を用いて橋と関節点を求める (O(V+E))
 
 橋 (bridge): 取り除くと連結成分が増える辺
 関節点 (articulation point): 取り除くと連結成分が増える頂点 (接続辺も取り除く)
@@ -41,8 +41,8 @@ def bridge_detect(adj, start=0):
         adj (list): 隣接リスト
         start (int): 開始頂点を示すインデックス
     Returns:
-        bridge (list): 橋を示すリスト。edge(u, v) が橋である時 (u, v) がこのリストに追加される
-        cycle_graph (list): cycle_graph[i] には i と '直接つながる' 二重連結成分が入っているリスト
+        bridge (list): 橋を示すリスト。edge(u, v) が橋である時 (u, v) がこのリストに追加される。u は DFS木において v の親に当たる。 (edge(v, u) は bridge に含まれない)
+        cycle_graph (list): cycle_graph[i] には i と '直接つながる' 二重連結成分が set で入っているリスト
     """
     n = len(adj)
     order = [-1] * n
@@ -121,17 +121,18 @@ def contract_from_cycle(bridge, cycle_graph):
     二重連結成分分解を行う (O(V+E))
     Args:
         bridge (list): 橋を示すリスト。edge(u, v) が橋である時 (u, v) がこのリストに追加される
-        cycle_graph (list): cycle_graph[i] には i と '直接つながる' 二重連結成分が入っているリスト
+        cycle_graph (list): cycle_graph[i] には i と '直接つながる' 二重連結成分が set で入っているリスト
     Returns:
+        vertex_to_group_num (list): vertex_to_group_num[i] には i がどのグループ番号で表されるグループに属するかが int で入っているリスト
         bi_connected (list): 二重連結成分ごとにグルーピングを行った時、そのグループ番号で表現された隣接リスト
     """
     n = len(cycle_graph)
     visited = [False] * n
-    group = [-1] * n
+    vertex_to_group_num = [-1] * n
     def dfs(u, group_num):
         ' u と同じ二重連結成分に属する頂点全てに num なるグルーピングを施す。'
         visited[u] = True
-        group[u] = group_num
+        vertex_to_group_num[u] = group_num
         for v in cycle_graph[u]:
             if not visited[v]:
                 dfs(v, group_num)
@@ -144,9 +145,9 @@ def contract_from_cycle(bridge, cycle_graph):
     # そのグループ番号を新たなノードだとみなしたときの隣接リストを作る
     bi_connected = [[] for _ in range(cnt + 1)]
     for u, v in bridge:
-        bi_connected[group[u]].append(group[v])
-        bi_connected[group[v]].append(group[u])
-    return bi_connected
+        bi_connected[vertex_to_group_num[u]].append(vertex_to_group_num[v])
+        bi_connected[vertex_to_group_num[v]].append(vertex_to_group_num[u])
+    return vertex_to_group_num, bi_connected
     
 
 
@@ -163,8 +164,11 @@ if __name__ == "__main__":
                     (5, 8))
 
     bridge, cycle_graph = bridge_detect(adjacent_list, start=0)
-    print(bridge)    # [(1, 2), (0, 1), (6, 7), (0, 5)]
-    print(cycle_graph)    # [set(), {3, 4}, set(), {1, 4}, {1, 3}, {9, 6}, {8, 5}, set(), {9, 6}, {8, 5}]
-    print(contract_from_cycle(bridge, cycle_graph))    # [[1, 3], [2, 0], [1], [4, 0], [3]]
+    assert(bridge == [(1, 2), (0, 1), (6, 7), (0, 5)])
+    assert(cycle_graph == [set(), {3, 4}, set(), {1, 4}, {1, 3}, {9, 6}, {8, 5}, set(), {9, 6}, {8, 5}])
+    vertex_to_group_num, bi_connected = contract_from_cycle(bridge, cycle_graph)
+    assert(vertex_to_group_num == [0, 1, 2, 1, 1, 3, 3, 4, 3, 3])
+    assert(bi_connected == [[1, 3], [2, 0], [1], [4, 0], [3]])
     articulation = articulation_detect(adjacent_list, start=0)
-    print(articulation)    # [1, 6, 5, 0]
+    assert(articulation == [1, 6, 5, 0])
+    print(" * assertion test ok * ")

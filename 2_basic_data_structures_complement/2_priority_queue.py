@@ -42,7 +42,6 @@ class PQueueMin:
         self.entry_finder = dict()    # mapping of tasks to entries
         self.counter = itertools.count()    # unique sequence id
 
-
     def is_empty(self):
         return len(self.pq) == 0
     

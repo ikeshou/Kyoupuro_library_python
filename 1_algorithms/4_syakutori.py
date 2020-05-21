@@ -32,59 +32,55 @@ def scan_longest_interval_lt_eq_x(L, x):
     """
     L = {a_i | a_i >=0} とする
     a_1...a_n のうち、区間和が x 以下であるような区間を O(n) で探索する。
-    満足する区間の数と、そのうち最長の区間全てのリストを返す
+    満足する区間の数と、そのうち最長の区間のサイズ、最長の区間全てのリストを返す
 
-    >>> cnt, longest_intervals = scan_longest_interval_lt_eq_x([6,3,8,1,10], 12)
-    >>> cnt
-    10
-    >>> longest_intervals
-    [(1, 4)]
+    >>> cnt, width, longest_intervals = scan_longest_interval_lt_eq_x([6,3,8,1,10], 12)
+    >>> cnt, width, longest_intervals
+    (10, 3, [(1, 4)])
     """
     assert(all(map(lambda x:x>=0, L)))
     n = len(L)
-    cnt = 0
-    max_size = 0
-    longest_intervals = []
+    cnt, max_width, longest_intervals = 0, 0, []    # 満足する区間の数、そのうち最長の区間のサイズ、最長の区間全てのリストをここに保存して最後に返す
     right_end = 0
     summation = 0
     for left in range(0, n):
+        # 終了時に summation は sum(L[left:right_end]) を表す。
+        # [left, right_end) は (left を左端に固定した時の) 最長インターバルとなる。        
         while right_end < n and summation + L[right_end] <= x:
             summation += L[right_end]
             right_end += 1
-        # 終了時に summation は sum(L[left:right_end]) を表す。[left, right_end) は (left を左端に固定した時の) 最長インターバル
         size = right_end - left
-        if max_size < size:
-            max_size = size
-            longest_intervals = [(left, right_end)]
-        elif max_size == size:
-            longest_intervals.append((left, right_end))
+        # cnt への加算。[left:left] ... [left:right_end] が left を左端点とした時の条件を満たす区間である。
         cnt += size
+        # max_width, logest_intervals のメモ
+        if max_width < size:
+            max_width = size
+            longest_intervals = [(left, right_end)]
+        elif max_width == size:
+            longest_intervals.append((left, right_end))
+
         # 尺取りで完全に区間が潰れたら right_end も動かす
         if right_end == left:
             right_end += 1
         else:
             summation -= L[left]
-    return cnt, longest_intervals
+    return cnt, max_width, longest_intervals
 
 
 def scan_shortest_intervals_gt_eq_x(L, x):
     """
     L = {a_i | a_i >=0} とする
     a_1...a_n のうち、区間和が x 以上であるような区間を O(n) で探索する。
-    満足する区間の数と、そのうち最長の区間全てのリストを返す
+    満足する区間の数と、そのうち最短の区間の区間長、最短の区間全てのリストを返す
 
-    >>> cnt, shortest_intervals = scan_shortest_intervals_gt_eq_x([6,3,8,1,10], 11)
-    >>> cnt
-    8
-    >>> shortest_intervals
-    [(1, 3), (3, 5)]
+    >>> cnt, width, shortest_intervals = scan_shortest_intervals_gt_eq_x([6,3,8,1,10], 11)
+    >>> cnt, width, shortest_intervals
+    (8, 2, [(1, 3), (3, 5)])
     """
     assert(all(map(lambda x:x>=0, L)))
     n = len(L)
-    cnt = 0
+    cnt, min_width, shortest_intervals = 0, float('inf'), []    # 満足する区間の数、そのうち最短の区間のサイズ、最短の区間全てのリストをここに保存して最後に返す
     summation = 0
-    min_size = float('inf')
-    shortest_intervals = []
     right_start = 0
     for left in range(n):
         while right_start < n and summation < x:
@@ -96,19 +92,21 @@ def scan_shortest_intervals_gt_eq_x(L, x):
         if summation < x:    # これ以上 left を進めても満たす区間は存在しない
             break
         size = right_start - left
-        if min_size > size:
-            min_size = size
-            shortest_intervals = [(left, right_start)]
-        elif min_size == size:
-            shortest_intervals.append((left, right_start))
-        # 上述の break 判定により必ず L[left:right_start] ... L[left:n] は必ず条件を満たす
+        # cnt への加算。上述の break 判定により必ず L[left:right_start] ... L[left:n] が left を左端点とした時の条件を満たす区間である
         cnt += n - right_start + 1
+        # min_width, shortest_intervals のメモ
+        if min_width > size:
+            min_width = size
+            shortest_intervals = [(left, right_start)]
+        elif min_width == size:
+            shortest_intervals.append((left, right_start))
+
         # 尺取りで完全に区間が潰れたら right_end も動かす
         if right_start == left:
             right_start += 1
         else:
             summation -= L[left]
-    return cnt, shortest_intervals        
+    return cnt, min_width, shortest_intervals        
         
 
 
@@ -117,20 +115,22 @@ if __name__ == "__main__":
     doctest.testmod()
 
     L_1 = [4, 6, 7, 8, 1, 2, 110, 2, 4, 12, 3, 9]
-    cnt, longest_intervals = scan_longest_interval_lt_eq_x(L_1, 25)
+    cnt, width, longest_intervals = scan_longest_interval_lt_eq_x(L_1, 25)
     assert(cnt == 32)
+    assert(width == 5)
     assert(longest_intervals == [(1, 6)])
     assert(L_1[longest_intervals[0][0]:longest_intervals[0][1]] == [6, 7, 8, 1, 2])
 
     L_2 = [4, 6, 7, 8, 1, 2, 110, 2, 4, 20, 3, 9]
-    cnt, shortest_intervals = scan_shortest_intervals_gt_eq_x(L_2, 25)
+    cnt, width, shortest_intervals = scan_shortest_intervals_gt_eq_x(L_2, 25)
     assert(cnt == 51)
+    assert(width == 1)
     assert(shortest_intervals == [(6, 7)])
     assert(L_2[shortest_intervals[0][0]:shortest_intervals[0][1]] == [110])
 
     # test for empty list
-    assert(scan_longest_interval_lt_eq_x([], 0) == (0, []))
-    assert(scan_shortest_intervals_gt_eq_x([], 0) == (0, []))
+    assert(scan_longest_interval_lt_eq_x([], 0) == (0, 0, []))
+    assert(scan_shortest_intervals_gt_eq_x([], 0) == (0, float('inf'), []))
 
     print(" * assertion test ok *")
     

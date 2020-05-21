@@ -61,6 +61,7 @@ if __name__ == "__main__":
         for i in range(H):
             accumulatation_sum += L[i][j]
             L[i][j] = accumulatation_sum
+
     print('2D imos')
     for i in range(H):
         print(*L[i][:-1])

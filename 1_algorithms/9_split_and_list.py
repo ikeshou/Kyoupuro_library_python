@@ -16,6 +16,8 @@ from bisect import bisect_right
 from itertools import accumulate
 
 
+#### 連続でない要素を取りたい場合 sum(A0, A3) などが考慮されてないです
+#### product でしっかり全列挙しましょう... (TODO)
 def make_all_summation_set(accum_list):
     """
     split_and_list() の内部で使用する関数。ある数列の累積和のリストをもとに、その数列の任意個 (0 個も含む) の要素を選んだときに取りうる値の集合を返す。

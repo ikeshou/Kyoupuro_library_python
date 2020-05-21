@@ -128,17 +128,14 @@ def one_dim_zaatsu_region(L, left, right):
         decompress (dict): 圧縮後の番号 -> 数列の値の辞書
     """
     compress, decompress = dict(), dict()
-    point_with_spacer = set(L)
-    point_with_spacer.add(left)    # 右側に spacer を追加しているので右端点は追加しなくて良い
-    for elm in L:
-        if elm + 1 <= right:    # この spacer が範囲内かはチェック
-            point_with_spacer.add(elm + 1)
+    # 右側に spacer を追加しているので右端点は追加しなくて良い。左端点と各点の一つ右の点を追加する。なお、この spacer が範囲内かはチェック
+    point_with_spacer = set([left]) | set(L) | set([elm + 1 for elm in L if elm + 1 <= right])
     point_set = set(L)
     for i, elm in enumerate(sorted(point_with_spacer)):
         if elm in point_set:
             compress[elm] = i
             decompress[i] = elm
-    return len(point_with_spacer), compress, decompress      
+    return len(point_with_spacer), compress, decompress
 
 
 class TwoDimZaatsu:
@@ -212,23 +209,10 @@ def two_dim_zaatsu_order(L):
     return len(L_x), len(L_y), TwoDimZaatsu(compress_x, compress_y, decompress_x, decompress_y)
 
 
-from collections import defaultdict
-class PointSet:
-    '二次元座標の集合を扱うクラス'
-    def __init__(self, L):
-        'L -> [[x1, y1], [x2, y2], ...]'
-        self.dict_x = defaultdict(set)
-        for x, y in L:
-            self.dict_x[x].add(y)
-    def isin(self, x, y):
-        if x not in self.dict_x:
-            return False
-        return y in self.dict_x[x]
-
-
-def two_dim_zaatsu_region(row, col, left, right, up, down):
+from itertools import chain
+def two_dim_zaatsu_region(row, col, sx, tx, sy, ty):
     """
-    全体領域をもとに、L の要素の存在しない連続した空白領域の個数を保持する形で座標圧縮する (O(nlgn))
+    全体領域 (D:{(x,y)|sx<=x<=tx, sy<=y<=ty}) をもとに、L の要素の存在しない連続した空白領域の個数を保持する形で座標圧縮する (O(nlgn))
 
     >>> row = [[[0,3], [5,3]], [[0,7], [9,7]], [[5,9], [5,9]]]
     >>> col = [[[3,0], [3,9]], [[8,0], [8,4]], [[9,5], [9,9]]]
@@ -270,41 +254,30 @@ def two_dim_zaatsu_region(row, col, left, right, up, down):
         TwoDimZaatsu: compress(i, j) により座標から圧縮後の番号のペアを、decompress(i, j) により圧縮後の番号のペアから座標を得ることができる
     """
     compress_x, compress_y, decompress_x, decompress_y = dict(), dict(), dict(), dict()
-    # 点の羅列の形に flatten し、PointSet を生成
-    point_set = PointSet(sum(row, []) + sum(col, []))
-    x_point_with_spacer = set([left])
-    y_point_with_spacer = set([up])
-    for start, end in row:
-        assert(start[1] == end[1])
-        x_point_with_spacer.add(start[0])
-        x_point_with_spacer.add(end[0])
-        if end[0] + 1 <= right:
-            x_point_with_spacer.add(end[0] + 1)
-        y_point_with_spacer.add(end[1])
-        if end[1] + 1 <= down:
-            y_point_with_spacer.add(end[1] + 1)
-    for start, end in col:
-        assert(start[0] == end[0])
-        x_point_with_spacer.add(end[0])
-        if end[0] + 1 <= right:
-            x_point_with_spacer.add(end[0] + 1)
-        y_point_with_spacer.add(start[1])
-        y_point_with_spacer.add(end[1])
-        if end[1] + 1 <= down:
-            y_point_with_spacer.add(end[1] + 1)
+    # 点の羅列の形に flatten し、point_set を生成
+    point_set = set(map(tuple, sum(row, []) + sum(col, [])))
+    # x_point_with_spacer について。row については start[0], end[0], end[0] + 1 (範囲内なら), col については (start[0]=)end[0], end[0] + 1 (範囲内なら) を追加したい。
+    # col の start[0], end[0] などは同じ値が重複してメモられた上で set となる過程で潰されるが、すっきりするのでまとめて書いてしまっている
+    x_point_with_spacer = set([sx]) | set(sum([[start[0], end[0], end[0] + 1] if end[0] + 1 <= tx else [start[0], end[0]] for start, end in chain(row, col)], []))
+    y_point_with_spacer = set([sy]) | set(sum([[start[1], end[1], end[1] + 1] if end[1] + 1 <= ty else [start[1], end[1]] for start, end in chain(row, col)], []))
     L_x = sorted(x_point_with_spacer)
     L_y = sorted(y_point_with_spacer)
-    for j, x in enumerate(L_x):
-        for i, y in enumerate(L_y):
-            if point_set.isin(x, y):
-                compress_x[x] = j
-                decompress_x[j] = x
-                compress_y[y] = i
-                decompress_y[i] = y
+    for i, x in enumerate(L_x):
+        for j, y in enumerate(L_y):
+            if (x, y) in point_set:
+                compress_x[x] = i
+                decompress_x[i] = x
+                compress_y[y] = j
+                decompress_y[j] = y
     return len(L_x), len(L_y), TwoDimZaatsu(compress_x, compress_y, decompress_x, decompress_y)
     
 
 def _fill_compressed_grid_for_doctest(row, col, zaatsu, grid):
+    """
+    doctest 用の関数
+    grid は座標圧縮後の架空の座標である (True で初期化されている)
+    もとの塗り潰しコマンド row, col および座標圧縮オブジェクト zaatsu をもとに grid の塗り潰される領域を False で上書きする
+    """
     for start, end in row:
         assert(start[1] == end[1])
         changed_start_x, changed_start_y = zaatsu.compress(start[0], start[1])

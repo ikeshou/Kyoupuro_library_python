@@ -39,7 +39,10 @@ class Edge:
 
 
 def bellman(edges, start=0):
-    'start から全頂点までの最短コストを計算して返す。辿り着けぬ場合は inf が出力される。負サイクルがある場合 NegativeLoopError があげられる'
+    """
+    start から全頂点までの最短コストを計算して返す。辿り着けぬ場合は inf が出力される。(O(V * E))
+    負サイクルがある場合 NegativeLoopError があげられる
+    """
     # E = len(edges)
     V = max(map(lambda x: max(x.here, x.to), edges)) + 1    # 0 to この値なので
     cost = [float('inf')] * V
@@ -75,5 +78,65 @@ if __name__ == "__main__":
          (2, 0, 6))
     edge_list = list(starmap(Edge, t))
 
-    cost = bellman(edge_list)
-    print(cost)    # [0, 5, 4, 6, 3, 0, 7, 10, 1, 0]
+    cost = bellman(edge_list, start=0)
+    assert(cost ==  [0, 5, 4, 6, 3, 0, 7, 10, 1, 0])
+
+    # scipy の bellman_ford と比較
+    """
+    - 引数として隣接行列 or CSR フォーマットの疎行列を渡して最短距離を計算させる
+        null_value として存在しない辺を指定する (デフォルトは 0, 10**9 や inf を指定しよう)
+    - 戻り値は各点に対する最短距離の行列 (numpy array) (各値は float になっていることに注意)
+        到達できない頂点に対しては inf が入る
+    - return_predecessors = True とすると最短経路と合わせて「その経路を取った時一つ前の頂点のインデックス」を記録した行列も返る
+        到達できない頂点に対しては適当な負の値 (-9999 など) が入る
+    - 単一始点最短経路を求めたい場合、その始点を indices = int or list として指定する。リストで複数指定したらそれだけ計算してくれる
+    - デフォルトは有向グラフとして扱われる。 directed = False とすることで無向グラフとして扱うようになる (mat[i, j], mat[j, i] のうち小さい方の値を勝手に他方に fill してくれるイメージ)
+    - デフォルトは重みつきとして扱われる。 unweighted = True とすることで重みなしグラフとして扱うようになる (全ての重みが 1 になるイメージ)
+    """
+    import numpy as np
+    import scipy.sparse.csgraph as cs
+    inf = float('inf')
+    mat = np.full((10, 10), inf)
+    mat[0, 1] = 5
+    mat[1, 4] = -2
+    mat[2, 0] = 6
+    mat[2, 3] = 2
+    mat[3, 6] = 1
+    mat[4, 5] = -3
+    mat[4, 7] = 7
+    mat[5, 2] = 4
+    mat[5, 8] = 1
+    mat[8, 9] = -1
+    G = cs.csgraph_from_dense(mat, null_value=inf)
+    dist, path = cs.bellman_ford(G, return_predecessors=True)
+    print("SciPy Power!")
+    print(dist)
+    print(path)
+    """
+    [[ 0.  5.  4.  6.  3.  0.  7. 10.  1.  0.]
+    [ 5.  0. -1.  1. -2. -5.  2.  5. -4. -5.]
+    [ 6. 11.  0.  2.  9.  6.  3. 16.  7.  6.]
+    [inf inf inf  0. inf inf  1. inf inf inf]
+    [ 7. 12.  1.  3.  0. -3.  4.  7. -2. -3.]
+    [10. 15.  4.  6. 13.  0.  7. 20.  1.  0.]
+    [inf inf inf inf inf inf  0. inf inf inf]
+    [inf inf inf inf inf inf inf  0. inf inf]
+    [inf inf inf inf inf inf inf inf  0. -1.]
+    [inf inf inf inf inf inf inf inf inf  0.]]
+
+    [[-9999     0     5     2     1     4     3     4     5     8]
+    [    2 -9999     5     2     1     4     3     4     5     8]
+    [    2     0 -9999     2     1     4     3     4     5     8]
+    [-9999 -9999 -9999 -9999 -9999 -9999     3 -9999 -9999 -9999]
+    [    2     0     5     2 -9999     4     3     4     5     8]
+    [    2     0     5     2     1 -9999     3     4     5     8]
+    [-9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999]
+    [-9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999]
+    [-9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999     8]
+    [-9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999 -9999]]
+    """
+
+
+
+
+

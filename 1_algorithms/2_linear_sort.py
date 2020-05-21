@@ -84,7 +84,7 @@ def radix_sort(L_str):
     # empty だと max の引数が [] になり困るのでチェック
     if L_str != []:
         max_digit = max(map(len, L_str))
-        filled = ['0'*(max_digit-len(elm))+elm for elm in L_str]
+        filled = ['0'*(max_digit-len(elm))+elm for elm in L_str]    # 足りない桁に左から 0 fill
         
         for digit in range(max_digit-1, -1, -1):
             counting_sort_destructive(filled, 9, key=lambda x: int(x[digit]))    # k = 0 to 9
