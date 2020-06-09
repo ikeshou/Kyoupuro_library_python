@@ -20,11 +20,14 @@ dp[k+1][k+1][j] = dp[k][k+1][j]
 
 
 from copy import deepcopy
-
 def warshall_floyd(adj_mat_with_weight):
     """
     Warshall-Floyd 法 (O(V^3), 1 sec だと v~500 とかが限界)
     全点対間の最短経路を三次元 DP で求める
+        - 定式化
+        - dp[k+1][i][j] を 0...k, i, j なる頂点を使用できる時の i~j 最短距離とする (k+1=0 の時は e(i,j))
+        - dp[k+1][i][j] = min(dp[k][i][j], dp[k][i][k+1]+dp[k][k+1][j])
+        - 最後に必要なのは dp[V][i][j] 。上の漸化式をみるに 2 次元 array があれば使いまわしてメモリ節約できる。
     Args:
         adj_mat_with_weight (list): 重みを記録した隣接行列 (非接続頂点は inf)
     Returns:
@@ -36,11 +39,12 @@ def warshall_floyd(adj_mat_with_weight):
     for i in range(V):
         dp[i][i] = 0
     # 漸化式を解く
-    for k in range(1, V+1):
+    # 正当性の証明は上記だが、気分的には全中継地点 k を調べて i-j 最短距離を dp[i][j] に記録しているイメージで書ける
+    for k in range(V):
         for i in range(V):
             for j in range(V):
                 # new 2d-table # old 2d-table
-                dp[i][j] = min(dp[i][j], dp[i][k-1]+dp[k-1][j])
+                dp[i][j] = min(dp[i][j], dp[i][k]+dp[k][j])
     return dp
 
 

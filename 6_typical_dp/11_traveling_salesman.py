@@ -31,7 +31,7 @@ def solve_TSP(dist_mat):
     dp = [[float('inf')] * n for _ in range(1 << n)]
     previous = [[None] * n for _ in range(1 << n)]
     dp[0][0] = 0
-    for S in range(1, pow(2, n)):
+    for S in range(1, 1<<n):
         for v in range(n):
             if S & (1<<v):
                 for u in range(n):
@@ -64,5 +64,5 @@ if __name__ == "__main__":
                 (7, 6, I, I, 0))
     min_cost, hamilton_path = solve_TSP(dist_mat)
     assert(min_cost == 22)
-    assert(hamilton_path == [0, 3, 4, 1, 2])
+    assert(hamilton_path == [0, 3, 4, 1, 2, 0])
     print(" * assertion test ok * ")

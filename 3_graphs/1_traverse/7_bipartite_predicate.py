@@ -13,13 +13,17 @@ def bipartite_predicate(adj):
     color[start] = True
     stack = [start]
     while stack:
-        u = stack.pop()
+        # u = stack.pop()
+        u = stack[-1]
         for v in adj[u]:
             if color[v] is None:
                 color[v] = not color[u]
                 stack.append(v)
+                break
             elif color[v] == color[u]:
                 return False
+        else:
+            stack.pop()
     return True
 
 

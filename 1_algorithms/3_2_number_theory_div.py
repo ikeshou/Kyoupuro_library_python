@@ -18,9 +18,23 @@ factorial_gen(n):
     O(n) (すでに計算済みのものは O(1))
     n! を求める
 
-combination(n, r, m):
-    O(nlgm) (階乗がすでに計算済みの場合 O(lgm)) (mod の階乗が繰返し二乗法分 O(lgm) かかる)
+make_factorial_table(n, m):
+    O(n)
+    0! ... n! (mod m) までの階乗の計算結果のテーブルを作る
+
+make_inv_factorial_table(n, m):
+    O(n + lg m)
+    1/0! ... 1/n! (modm) までの階乗の逆元の計算結果のテーブルを作る
+
+combination(n, r, m, fact_table, inv_fact_table=None):
+    O(lgm) (inv_fact_table を与えない場合、mod の階乗が繰返し二乗法の分だけかかる) or O(1) (与える場合)
     nCr (mod m) を求める
+
+Pascal:
+    __init__(n):
+        O(n^2) で初期化、0C0 ... nCn までのパスカルの三角形を構築する
+    combination(a, b):
+        O(1) で aCb を計算する
 """
 
 
@@ -101,9 +115,9 @@ def factorial_gen():
 # ===== combination with mod =======
 def make_factorial_table(size, mod):
     """
-    fact_mod[i] は i! % mod を表す。fact_mod[0] ~ facto_mod[size] まで計算可能なテーブルを返す
-    >>> make_factorial_table(20, 10**9+7)
-    [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600, 227020758, 178290591, 674358851, 789741546, 425606191, 660911389, 557316307, 146326063]
+    fact_mod[i] は i! % mod を表す。fact_mod[0] ~ fact_mod[size] まで計算可能なテーブルを O(n) で返す
+    >>> make_factorial_table(10, 10**9+7)
+    [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800]
     """
     fact_mod = [1] * (size + 1)
     for i in range(1, size + 1):
@@ -111,12 +125,30 @@ def make_factorial_table(size, mod):
     return fact_mod
 
 
-def combination(n, r, mod, fact_table):
+def make_inv_factorial_table(size, mod):
+    """
+    inv_fact_mod[i] は 1/i! % mod を表す。inv_fact_mod[0] ~ inv_fact_mod[size] まで計算可能なテーブルを O(n+lgm) で返す
+    >>> make_inv_factorial_table(10, 10**9+7)
+    [1, 1, 500000004, 166666668, 41666667, 808333339, 301388891, 900198419, 487524805, 831947206, 283194722]
+    """
+    inv_fact_mod = [1] * (size + 1)
+    n_fact = 1
+    for i in range(2, size+1):
+        n_fact = (n_fact * i) % mod
+    inv_fact_mod[size] = pow(n_fact, mod-2, mod)    # a ^ p-2 ≡ 1/a (mod p) において a = n! とする。 1/n! (mod p) を求める
+    for i in range(size-1, -1, -1):
+        inv_fact_mod[i] = (inv_fact_mod[i+1] * (i+1)) % mod    # 1/(n-1)! = 1/n! * n
+    return inv_fact_mod
+
+
+
+def combination(n, r, mod, fact_table, inv_fact_table=None):
     """
     フェルマーの小定理 
     a ^ p-1 ≡ 1 (mod p)
     a ^ p-2 ≡ 1/a (mod p) (逆元)
     nCr = (n!) / ((n-r)! * r!) だが、mod p の世界ではこの分母を逆元を用いて計算しておくことが可能
+    逆元テーブルが与えられない場合繰返し二乗法により O(lgm) で計算する。与えられる場合 O(1) で計算する。
     
     >>> m = 1000000007
     >>> fact_table = make_factorial_table(100, m)
@@ -124,13 +156,42 @@ def combination(n, r, mod, fact_table):
     252
     >>> combination(100, 50, m, fact_table)
     538992043
+    >>> inv_fact_table = make_inv_factorial_table(100, m)
+    >>> combination(100, 50, m, fact_table, inv_fact_table)
+    538992043
     """
     numerator = fact_table[n]
-    denominator = (fact_table[n-r] * fact_table[r]) % mod
+    if inv_fact_table is None:
+        denominator = pow((fact_table[n-r] * fact_table[r]) % mod, mod-2, mod)
+    else:
+        denominator = (inv_fact_table[n-r] * inv_fact_table[r]) % mod
     # pow はすでに繰り返し二乗法で効率的に実装されている
-    return (numerator * pow(denominator, mod-2, mod)) % mod
+    return (numerator * denominator) % mod
 # ==================================    
 
+
+# ==== Pascal's triangle ===========
+class Pascal:
+    def __init__(self, num):
+        """
+        0C0 ... numCnum までのコンビネーションの値を計算したパスカルの三角形を O(n^2) で構築する。
+        self.pascal[i][j] = i C j
+        """
+        self.n = num
+        self.pascal = [[1] * (i+1) for i in range(num+1)]    # iC0, iCi は 1. 初期化をかねて記入しておく
+        for i in range(2, num+1):    # i 段目 iC0 ... iCi (0, 1 段目は 1 なので更新する必要がない。2 段目以降をみる。)
+            for j in range(1, i):    # iC0, iCi 以外について update
+                self.pascal[i][j] = self.pascal[i-1][j-1] + self.pascal[i-1][j]
+    
+    def comb(self, a, b):
+        """
+        >>> p = Pascal(10)
+        >>> p.comb(10, 5)    # 10C5
+        252
+        """
+        assert a >= b
+        return self.pascal[a][b]
+# ================================== 
 
 
 if __name__ == "__main__":
@@ -140,9 +201,23 @@ if __name__ == "__main__":
     # check the corner cases!
     mod = 10 ** 9 + 7
     fact_mod = make_factorial_table(100, mod)
+    inv_fact_mod = make_inv_factorial_table(100, mod)
     assert(combination(1, 0, mod, fact_mod) == 1)
+    assert(combination(1, 0, mod, fact_mod, inv_fact_mod) == 1)
     assert(combination(100, 0, mod, fact_mod) == 1)
+    assert(combination(100, 0, mod, fact_mod, inv_fact_mod) == 1)
     assert(combination(1, 1, mod, fact_mod) == 1)
+    assert(combination(1, 1, mod, fact_mod, inv_fact_mod) == 1)
     assert(combination(100, 1, mod, fact_mod) == 100)
+    assert(combination(100, 1, mod, fact_mod, inv_fact_mod) == 100)
+
+
+    p = Pascal(50)
+    assert(p.comb(0, 0) == 1)
+    assert(p.comb(1, 0) == 1)
+    assert(p.comb(1, 1) == 1)
+    assert(p.comb(50, 0) == 1)
+    assert(p.comb(50, 50) == 1)
+    assert(p.comb(50, 25) == 126410606437752)
 
     print(" * assertion test ok * ")

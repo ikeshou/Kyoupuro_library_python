@@ -55,7 +55,7 @@ def reconstruct_LCS(table, s, t, n, m):
         elif table[i][j] == 'jdecf':
             j -= 1
         else:
-            raise RuntimeError(f"unknown marker.  got {table[i][j]} (only idecf, jdecf, i_and_jdecf, i_or_j_decf are allowed.)")
+            raise RuntimeError(f"unknown marker. got {table[i][j]} (only idecf, jdecf, i_and_jdecf, i_or_j_decf are allowed.)")
     return ''.join(reversed(ans))
 
 

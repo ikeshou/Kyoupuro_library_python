@@ -165,7 +165,7 @@ class TwoDimTree:
         if seq:
             arranged = sorted(seq, key=itemgetter(depth % 2))
             mid = len(seq) // 2
-            self.insert(seq[mid][0], seq[mid][1])
+            self.insert(arranged[mid][0], arranged[mid][1])
             self._balance_insert(arranged[:mid], depth+1)
             self._balance_insert(arranged[mid+1:], depth+1)
 

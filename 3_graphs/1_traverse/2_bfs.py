@@ -36,7 +36,8 @@ def bfs_queue_traverse(u):
     # 初期化
     for i in range(len(adjacent_list)):
         visited[i] = False
-    queue = deque([u])
+    queue = deque()
+    queue.append(u)    # 距離も保存したかったら queue.append([u, 0]) という形で保存していく
     while queue:
         current = queue.popleft()
         if not visited[current]:
@@ -46,7 +47,7 @@ def bfs_queue_traverse(u):
                     queue.append(v)
 
 
-
+# もし高速に処理するなら path_set のような引数も用意して O(1) で含まれているかを判定できるようにする必要があるだろう。
 def bfs_queue_path(start, goal, path=None):
     if path is None:
         path = deque([[start]])

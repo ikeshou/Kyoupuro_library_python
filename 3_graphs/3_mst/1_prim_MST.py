@@ -53,6 +53,7 @@ def prim_mst(adj, start=0):
     return total_cost, parent_ind_of_each_node
 
 
+
 if __name__ == "__main__":
     adj_with_weight = (((1, 4), (7, 8)),
                        ((0, 4), (2, 8), (7, 11)),

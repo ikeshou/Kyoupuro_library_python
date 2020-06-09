@@ -23,11 +23,11 @@ class PQueueMin:
 
 def dijkstra(adj_with_weight, start=0):
     """
-    Dijkstra 法 O((E+V)lgV) (頂点を回るときに最小のものを取り出していくのに VlgV, cost の更新で ElgV)
+    重みつき隣接リストを用いた Dijkstra 法 O((E+V)lgV) (頂点を回るときに最小のものを取り出していくのに VlgV, cost の更新で ElgV)
     負辺を含まぬ重みつきグラフについて、ある頂点から他の頂点までの最短コストを貪欲に計算する
     """
     V = len(adj_with_weight)
-    cost = [float('inf')] * V
+    cost = [float('inf')] * V    # cost[i] = (minimum cost from node_start to node_i)
     cost[start] = 0
     fixed = [False] * V
     pq = PQueueMin()
@@ -45,9 +45,39 @@ def dijkstra(adj_with_weight, start=0):
 
 
 
+"""
+密なグラフの場合はこちらの方が軽いかも。
+重みつき隣接行列を用いる Dijkstra 法 (O(V^2))
+verified @ABC079D
+"""
+def min_ind_except_for_fixed(seq, fixed):
+    m = float('inf')
+    for i in range(len(seq)):
+        if not fixed[i] and seq[i] < m:
+            min_ind, m = i, seq[i]
+    return min_ind
+
+
+def dijkstra_matrix(adj_matrix_weight, start):
+    """
+    重みつき隣接行列を用いた Dijkstra 法 O(V^2) (毎回全頂点を見て距離が確定してない奴らの中で最小となっているものを選ぶ)
+    負辺を含まぬ重みつきグラフについて、ある頂点から他の頂点までの最短コストを貪欲に計算する
+    """
+    V = len(adj_matrix_weight)
+    cost = [float('inf')] * V    # cost[i] = (minimum cost from node_start to node_i)
+    cost[start] = 0
+    fixed = [False] * V
+    for _ in range(V):
+        u = min_ind_except_for_fixed(cost, fixed)
+        fixed[u] = True
+        for j in range(V):
+            cost[j] = min(cost[j], cost[u] + adj_matrix_weight[u][j])
+    return cost
+
+
 
 if __name__ == "__main__":
-    #                             to weight
+    #                             to/weight
     adjacent_list_with_weight = (((1, 5), (2, 6)),
                                  ((0, 5), (4, 2)),
                                  ((0, 6), (3, 2), (5, 4)),

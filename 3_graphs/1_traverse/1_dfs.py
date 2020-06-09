@@ -97,7 +97,7 @@ def dfs_stack_traverse(u):
             print(f"{current})", end=" ")
 
 
-
+# もし高速に処理するなら path_set のような引数も用意して O(1) で含まれているかを判定できるようにする必要があるだろう。
 def dfs_recursive_path(start, goal, path=None):
     """
     再帰を用いた DFS で start から goal までの (頂点の重複を許さない) 全経路を探索する。
