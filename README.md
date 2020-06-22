@@ -2,6 +2,8 @@
 Python libraries for programming competition
 
 Useful and typical algorithms and data structures that are not covered with Python's built-in libraries are implemented.
+All of the libraries passed assertion test and doctest written in itself.
+Some of the libraries are verified by AOJ and AtCoder.
 
 
 ## 1. algorithms
