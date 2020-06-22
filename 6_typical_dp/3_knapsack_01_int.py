@@ -1,4 +1,5 @@
 """
+<Algorithm Introduction vol.2 p.58>
 ナップザック問題
 
 n 個の品物があり、i 番目の品物のそれぞれ重さと価値が weight[i],value[i] (0 <= i <= n-1)

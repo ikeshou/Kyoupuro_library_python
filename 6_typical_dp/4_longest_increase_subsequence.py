@@ -1,4 +1,5 @@
 """
+<Algorithm Introduction vol.2 p.34>
 最長増加部分列問題 (Longest Increase Subsequence, LIS)
 
 ある配列 L について広義単調増加となる部分列を考える。

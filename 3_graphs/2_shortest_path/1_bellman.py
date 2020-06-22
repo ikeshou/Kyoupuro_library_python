@@ -1,8 +1,10 @@
 """
-<Algorithm Introduction p.248-251>
+<Algorithm Introduction vol.2 p.248-251>
 Bellman-Ford 法 (O(V * E))
 負サイクルを含まない一般の重みつき有向グラフについて、ある頂点から全頂点について最短距離を求める
 
+
+<algorithm>
 start 以外の全ての頂点のコストを inf, start を 0 に設定する
 E 個存在する各エッジ uv に対し cost[v] = min(cost[v], cost[u]+w[uv]) によりコストを緩和する
 
@@ -25,20 +27,24 @@ k 回目のループで cost[u1]...cost[uj] (u is adjacent to v) は高々 k 本
 併せて考えると、 |v-1| 回のループで更新がストップすることがわかる。
 """
 
+from typing import Sequence, List, Union
+
+Num = Union[int, float]
+
 
 class NegativeLoopError(Exception):
     pass
 
 
 class Edge:
-    def __init__(self, here, to, weight):
+    def __init__(self, here: int, to: int, weight: Num):
         self.here = here
         self.to = to
         self.weight = weight
 
 
 
-def bellman(edges, start=0):
+def bellman(edges: Sequence[Edge], start: int=0) -> List[int]:
     """
     start から全頂点までの最短コストを計算して返す。辿り着けぬ場合は inf が出力される。(O(V * E))
     負サイクルがある場合 NegativeLoopError があげられる
@@ -80,6 +86,7 @@ if __name__ == "__main__":
 
     cost = bellman(edge_list, start=0)
     assert(cost ==  [0, 5, 4, 6, 3, 0, 7, 10, 1, 0])
+
 
     # scipy の bellman_ford と比較
     """

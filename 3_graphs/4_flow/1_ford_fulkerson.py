@@ -1,6 +1,8 @@
 """
+(参考) <Algorithm Introduction vol.2 p.296-315>
 Ford-Fulkerson 法を用いた最大フローの算出
 
+<algorithm>
 増加可能経路を発見し、フローを流し... を限界まで繰り返すのみ。
 ポイントはフローを流した際 '逆向きにどのくらい流せるか (押し戻しが許されるか)' も更新するところ。
 無向グラフについて。 capacity C で k だけ流したとして順流 / 逆流 = C/C -> C-k/C+k と更新される。
@@ -10,22 +12,28 @@ Ford-Fulkerson 法を用いた最大フローの算出
 発見が DFS によるものだと O(V+E) * O(|f*|) = O(E|f*|) (但し f* は最大フローの値)
       BFS              O(V+E) * O(VE) = O(VE^2) 
 前者を Ford-Fulkerson algorithm, 後者を Edmonds-Karp algorithm という。
+
+verified @ABC010D
 """
 
 
 
 from collections import deque
 from copy import deepcopy
+from typing import Sequence, List, Union, Any
+
+Num = Union[int, float]
+
 
 class Edge:
-    def __init__(self, here, to, capacity, is_rev, rev_edge):
+    def __init__(self, here: int, to: int, capacity: Num, is_rev: bool, rev_edge: Any):
         self.here = here
         self.to = to
         self.capacity = capacity
         self.is_rev = is_rev    # 最初に張られた時逆辺か否か, bool 型
         self.rev_edge = rev_edge    # 対応する逆辺への参照, Edge 型
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"|{self.here}->{self.to}({self.capacity})|"
 
 
@@ -38,14 +46,14 @@ class FordFulkerson:
     ポイントはフローを流した際 '逆向きにどのくらい流せるか (押し戻しが許されるか)' も更新するところ。
     有向グラフについて。 capacity C で k だけ流したとして順流 / 逆流 = C/0 -> C-k/k と更新される。
     """
-    def __init__(self, num_of_v):
+    def __init__(self, num_of_v: int):
         self.num_of_v = num_of_v    # 頂点数
         self.graph = [[] for _ in range(num_of_v)]   # 隣接する頂点のインデックスの代わりに Edge を収納した隣接リスト
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ', '.join([str(e) for i in range(self.num_of_v) for e in self.graph[i] if not e.is_rev])
     
-    def add_edge(self, here, to, capacity):
+    def add_edge(self, here: int, to: int, capacity: Num) -> None:
         """
         here から to へ容量 capacity の有向辺をはる。
         その際、to から here への初期容量 0 の逆辺も同時にはる。
@@ -67,15 +75,15 @@ class FordFulkerson:
         self.graph[here].append(forward)
         self.graph[to].append(backward)
     
-    def reserve_state(self):
+    def reserve_state(self) -> None:
         """最大フローの計算では Edge の capacity は順次書き換えられる。後で初期状態に戻す必要がある場合は予め self.graph のディープコピーを取り出しておく。"""
         return deepcopy(self.graph)
     
-    def restore_state(self, graph_state):
+    def restore_state(self, graph_state) -> None:
         """ reserve_state() により取り出した graph_state の状態へ、フローネットワークを restore する。"""
         self.graph = graph_state
     
-    def ford_fulkerson(self, start_ind, goal_ind):
+    def ford_fulkerson(self, start_ind: int, goal_ind: int) -> Num:
         """
         増加可能経路を DFS により発見する。
         O(V+E) * O(|f*|) = O(E|f*|) (但し f* は最大フローの値) 
@@ -89,7 +97,7 @@ class FordFulkerson:
                 total_flow += self._update_flow(p)
                 print(f"path: {[start_ind]+list(map(lambda x: x.to, p))}, current flow: {total_flow}")    # 提出時にはコメントアウトする
     
-    def edmonds_karp(self, start_ind, goal_ind):
+    def edmonds_karp(self, start_ind: int, goal_ind: int) -> Num:
         """
         増加可能経路を BFS により発見する。
         O(V+E) * O(VE) = O(VE^2) 
@@ -103,7 +111,7 @@ class FordFulkerson:
                 total_flow += self._update_flow(p)
                 print(f"path: {[start_ind]+list(map(lambda x: x.to, p))}, current flow: {total_flow}")    # 提出時にはコメントアウトする
         
-    def _dfs(self, start_ind, goal_ind):
+    def _dfs(self, start_ind: int, goal_ind: int) -> List[Edge]:
         """
         capacity > 0 の辺のみ連結していると見なした有向グラフについて、start_ind ~ goal_ind の経路を DFS で一つ発見して返す
         進むたびに頂点を stack に積む代わりに、Edge を stack に積んでいる。
@@ -124,7 +132,7 @@ class FordFulkerson:
             else:
                 path.pop()    # 新たにいくところが無くなったら戻る
     
-    def _bfs(self, start_ind, goal_ind):
+    def _bfs(self, start_ind: int, goal_ind: int) -> List[Edge]:
         """
         capacity > 0 の辺のみ連結していると見なした有向グラフについて、start_ind ~ goal_ind の経路を BFS で一つ発見して返す
         頂点を enqueue する代わりに、Edge を enqueue している。
@@ -145,7 +153,7 @@ class FordFulkerson:
                     tmp.append(e)
                     q.append(tmp)
     
-    def _update_flow(self, path):
+    def _update_flow(self, path: List[Edge]) -> Num:
         """ Edge のリストである path において、最大フローを流し capacity を更新する。流したフローを返す。 """
         maximum_flow = float('inf')
         for e in path:

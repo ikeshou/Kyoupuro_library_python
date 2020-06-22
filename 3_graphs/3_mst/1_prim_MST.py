@@ -1,9 +1,11 @@
 """
+(参考) <Algorithm Introduction vol.2 p.230-236>
 無向グラフに対する Prim 法による MST の構築 (O((V+E)lgV)
 
+<algorithm>
 MST を成長させる root を受け取る
 これが最初の MST の部分木となる
-MST 部分木の頂点(S) - それ以外の頂点を接続する(V-S) としてカット(S, V-S)と交差する最小の重みの辺を選択し、MST 部分木を成長させる。
+MST 部分木の頂点(S) - それ以外の頂点を接続する(V-S) として、カット(S, V-S)と交差する最小の重みの辺を選択し、MST 部分木を成長させる。
 
 候補となる最小の辺を効率的に選択するために min pqueue を使用する。
 min pqueue には V-S の各頂点が、'それぞれの頂点と S の各頂点と接続する辺のうち最小のもの' をキーとして収納される。
@@ -12,25 +14,31 @@ V-S の各頂点について選択されうる S との接続辺の予選を行�
 決勝は extract の際よしなに min pqueue 側で選択される
 """
 
+
 from heapq import heappush, heappop
+from typing import Sequence, List, Tuple, Union
+
+Num = Union[int, float]
+
+
 
 class PQueueMin:
     def __init__(self):
         self.h = []
     
-    def is_empty(self):
+    def is_empty(self) -> bool:
         return len(self.h) == 0
 
-    def push(self, ind, parent_ind, weight):
-        entry = [weight, ind, parent_ind]
+    def push(self, ind: int, parent_ind: int, weight: Num) -> None:
+        entry = (weight, ind, parent_ind)
         heappush(self.h, entry)
     
-    def pop(self):
+    def pop(self) -> Tuple[int, int, Num]:
         weight, ind, parent_ind = heappop(self.h)
-        return [ind, parent_ind, weight]
+        return ind, parent_ind, weight
     
 
-def prim_mst(adj, start=0):
+def prim_mst(adj: Sequence[Sequence[int]], start: int=0) -> Tuple[int, List[int]]:
     n = len(adj)
     pq = PQueueMin()
     pq.push(start, None, 0)
@@ -65,6 +73,7 @@ if __name__ == "__main__":
                        ((0, 8), (1, 11), (6, 1), (8, 7)),
                        ((2, 2), (6, 6), (7, 7)))
     total, parent_list = prim_mst(adj_with_weight)
-    print(total)    # 37
-    print(parent_list)    # [None, 0, 1, 2, 3, 2, 5, 6, 2]
+    assert(total == 37)
+    assert(parent_list == [None, 0, 1, 2, 3, 2, 5, 6, 2])
+    print(" * assertion test ok * ")
 

@@ -1,5 +1,5 @@
 """
-<Algorighm Introduction p.215-218, p.252-253>
+(参考) <Algorighm Introduction p.215-218, p.252-253>
 BFS (DFS も可能) を用いて DAG をトポロジカルソートする (O(V+E))
 (閉路のない有向グラフについての各有向辺が順方向になるようにソートを行う)
 トポロジカルソートが行える (BFS のアルゴリズムについて、ソートずみグラフの頂点数がもとのグラフの頂点数と一致する) ⇄ DAGである ⇄ この有向グラフは閉路がない
@@ -9,7 +9,7 @@ BFS (DFS も可能) を用いて DAG をトポロジカルソートする (O(V+E
 トポロジカルソート -> その順にコストを緩和 により O(V+E) で計算することが可能！ cf. Bellman-Ford
 
 
-algorithm
+<algorithm>
 
 BFS
 入次数が 0 の頂点があればその頂点をソート後の結果に追加。その頂点と隣接した頂点の入次数を -- するのを繰り返す。
@@ -37,19 +37,22 @@ DAG ではないときもぶっ壊れたソート結果を返すので
 """
 
 
-
+# verified @ABC139E
 from collections import deque
+from typing import Sequence, List
 
-def topological_bfs(adj):
+
+def topological_bfs(adj: Sequence[Sequence[int]]) -> List[int]:
     """
     グラフをトポロジカルソートしたときの頂点の並び順を表すリストを返す。この長さが頂点数に一致しない場合は閉路あり。
+
     Args:
         adj (list): 隣接リスト
     Returns:
         sorted_vertice (list): 有向グラフをトポロジカルソートしたときの頂点の並び順を表すリスト
     """
     n = len(adj)
-    dimensions = [0] * n
+    dimensions = [0] * n    # 入次数
     for edge in adj:
         for v in edge:
             dimensions[v] += 1
@@ -71,9 +74,11 @@ def topological_bfs(adj):
     return sorted_vertice
         
     
-def topological_dfs(adj):
+
+def topological_dfs(adj: Sequence[Sequence[int]]) -> List[int]:
     """
     グラフをトポロジカルソートしたときの index の並び順を表すリストを返す。グラフは DAG であることを仮定している。
+    
     Args:
         adj (list): 隣接リスト
     Returns:
@@ -81,19 +86,16 @@ def topological_dfs(adj):
     """
     n = len(adj)
     visited = [False] * n    # 複数回 DFS する。前回訪問ずみの頂点を判定し探索先から外す必要がある
-    unvisited_indices = set(range(n))   # DFS の際に未訪問の頂点から選択する作業がある。それを O(1) で行いたい
     buf = []
     def dfs(current=0):
         visited[current] = True
-        unvisited_indices.remove(current)
         for v in adj[current]:
             if not visited[v]:
                 dfs(v)
         buf.append(current)    # 帰りがけの順で後ろに追加
-    while unvisited_indices:
-        start = unvisited_indices.pop()
-        unvisited_indices.add(start)
-        dfs(start)
+    for i in range(n):
+        if not visited[i]:
+            dfs(i)
     buf.reverse()
     return buf
 

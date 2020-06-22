@@ -1,118 +1,25 @@
 """
-多次元データを扱うための二分探索木である kD tree (一次元、二次元まで実装)
-range search なる区間幅を指定してそれに含まれるデータを探索するクエリを O(n) で捌くことができる
+多次元データを扱うための二分探索木である kD tree (二次元版を実装)
+前処理に O(nlg^2n), range search なる区間幅を指定してそれに含まれるデータを探索するクエリを O(n^(1-1/d) + k) で捌くことができる
+(k はサーチで引っかかる要素数)
 
 
-query
-d 次元状の空間の点の集合に対し与えられた領域に含まれる点を列挙する
-点の数 n として、kD tree の構築に O(n*(logn)^2) (O(nlgn) のソートを木の高さ lgn 回行うので)
-サーチで引っかかる要素数 k として、1 回のサーチに O(n^(1-1/d) + k) 
-だけかかることが知られている。
-
-algorithm
-1D: 普通の BST を作成。現在のノードがレンジに含まれるか、左側の部分木が含まれる可能性はあるか、右側の部分木が含まれる可能性はあるかを再帰的に調べるのみ
-2D: depth ごとに大小関係を調査する key を x 座標、 y 座標と交互に変更する BST を作成。同様に調べる。
-    (root を depth = 0 として、depth % 2 == 0 のノードでは x 座標で、1 のノードでは  y 座標で比較を行う)
-    (一致していた場合 最初は右に振り分け以降は前回と逆方向に振り分ける)
-
-verified @ABC045_D
+<algorithm>
+depth ごとに大小関係を調査する key を x 座標、 y 座標と交互に変更する BST を作成
+(root を depth = 0 として、depth % 2 == 0 のノードでは x 座標で、1 のノードでは  y 座標で比較を行う)
+(一致していた場合 最初は右に振り分け以降は前回と逆方向に振り分ける)
 """
 
 
-class OneDimNode:
-    def __init__(self, x=None, parent=None, left=None, right=None):
-        """
-        1 次元二分探索木のためのノード
-        """
-        self.x = x
-        self.parent = parent
-        self.left = left
-        self.right = right
-        self.flag = True
-
-class OneDimTree:
-    def __init__(self, points=[]):
-        """
-        1 次元二分探索木 (kD tree) を作成する
-        """
-        # nil の設定
-        self.nil = OneDimNode()
-        self.nil.parent = self.nil
-        self.nil.left = self.nil
-        self.nil.right = self.nil
-        # root の設定
-        self.root = self.nil
-        # もし予め一次元の点の集合が与えられるのならバランスする形で kD tree を構築する
-        self._balance_insert(sorted(points))
-    
-    def _balance_insert(self, seq):
-        # seq はソートずみであるとする (1 次元の場合ソートするキーを変える必要がないので 1 回ですむ)
-        # 毎回中央値をとって insert すれば平衡になる
-        if seq:
-            mid = len(seq) // 2
-            self.insert(seq[mid])
-            self._balance_insert(seq[:mid])
-            self._balance_insert(seq[mid+1:])
-
-    
-    def traverse(self, node=None):
-        node = self.root if node is None else node
-        if node != self.nil:
-            self.traverse(node=node.left)
-            print(node.x, end=' ')
-            self.traverse(node=node.right)
-        
-    def insert(self, x):
-        """
-        kD tree に値が x であるノードを O(depth) で挿入する
-        (コンストラクタで生成した kD tree は平衡であることが保証されるが、insert により生成した部分の平衡性は保証されないことに注意)
-        """
-        trailer = self.nil    # x を挿入するべき nil の一つ前のノードを保存するトレーラポインタ
-        pos = self.root    # x を挿入するべき nil の場所を探す
-        while pos != self.nil:
-            trailer = pos
-            if x < pos.x:
-                pos = pos.left
-            elif pos.x < x:
-                pos = pos.right
-            else:
-                pos.flag ^= pos.flag
-                pos = pos.left if pos.flag else pos.right
-        inserted_node = OneDimNode(x, trailer, self.nil, self.nil)
-        # tree is empty
-        if trailer == self.nil:
-            self.root = inserted_node
-        # どこかのノードの子供の位置に挿入する時
-        elif x < trailer.x or (x == trailer.x and trailer.flag):
-            trailer.left = inserted_node
-        else:
-            trailer.right = inserted_node
-    
-    def one_dim_search(self, sx, tx, node=None):
-        """
-        kD tree に対し閉区間 [sx, tx] 内に存在する点を探してリストにまとめて返す (対応する点の個数 k として O(k))
-        下記のように検索必要性を判断し再帰的に左右の子に対し探索を行えば良い
-
-        <-------- node.x -------->
-           <----------->
-          少しでも [sx,tx] が左側ゾーン ((-inf, node.x]) に被っていたら検索しておく必要がある
-                      <----->
-                      少しでも [sx, tx] が右側ゾーン ([node.x, inf)) に被っていたら検索しておく必要がある
-        """
-        buf = []
-        node = self.root if node is None else node
-        if node.left != self.nil and sx <= node.x:
-            buf += self.one_dim_search(sx, tx, node.left)
-        if sx <= node.x <= tx:
-            buf.append(node.x)
-        if node.right != self.nil and tx >= node.x:
-            buf += self.one_dim_search(sx, tx, node.right)
-        return buf
-
-
 from operator import itemgetter
+from typing import List, Tuple, Optional, Union, Sequence
+
+Num = Union[int, float]
+
+
+# verified @ABC045D, ABC075D
 class TwoDimNode:
-    def __init__(self, x=None, y=None, parent=None, left=None, right=None):
+    def __init__(self, x: Optional[Num]=None, y: Optional[Num]=None, parent: Optional['TwoDimNode']=None, left: Optional['TwoDimNode']=None, right: Optional['TwoDimNode']=None):
         """
         2 次元二分探索木のためのノード
         """        
@@ -121,10 +28,9 @@ class TwoDimNode:
         self.parent = parent
         self.left = left
         self.right = right
-        self.flag = True
 
 class TwoDimTree:
-    def __init__(self, points=[]):
+    def __init__(self, points: Sequence[Sequence[Num]]=[]):
         """
         2 次元二分探索木 (kD tree) を作成する
         root の深さを 0 として、深さが偶数の場合そこでは x を基準に、奇数の場合 y を基準に二分探索木条件を満たすようにする
@@ -160,17 +66,17 @@ class TwoDimTree:
             print(f"({node.x},{node.y})", end=' ')
             self.preorder_traverse(node=node.right)
     
-    def _balance_insert(self, seq, depth=0):
+    def _balance_insert(self, seq: Sequence[Sequence[Num]], depth: int=0):
         # 毎回 x or y をキーとしてソートを行い、中央値をとって insert すれば平衡になる
         if seq:
             arranged = sorted(seq, key=itemgetter(depth % 2))
             mid = len(seq) // 2
-            self.insert(arranged[mid][0], arranged[mid][1])
+            self._insert(arranged[mid][0], arranged[mid][1])
             self._balance_insert(arranged[:mid], depth+1)
             self._balance_insert(arranged[mid+1:], depth+1)
 
 
-    def insert(self, x, y):
+    def _insert(self, x: Num, y: Num):
         """
         kD tree に値が (x, y) であるノードを O(depth) で挿入する
         (コンストラクタで生成した kD tree は平衡であることが保証されるが、insert により生成した部分の平衡性は保証されないことに注意)        
@@ -181,13 +87,10 @@ class TwoDimTree:
         while pos != self.nil:
             trailer = pos
             k, pos_k = (x, pos.x) if depth % 2 == 0 else (y, pos.y)
-            if k < pos_k:
+            if k <= pos_k:
                 pos = pos.left
-            elif pos_k < k:
-                pos = pos.right
             else:
-                pos.flag ^= pos.flag
-                pos = pos.left if pos.flag else pos.right
+                pos = pos.right
             depth += 1
         inserted_node = TwoDimNode(x, y, trailer, self.nil, self.nil)
         # trailer の depth
@@ -197,12 +100,12 @@ class TwoDimTree:
         if trailer == self.nil:
             self.root = inserted_node
         # どこかのノードの子供の位置に挿入する時
-        elif k < trailer_k or (k == trailer_k and trailer.flag):
+        elif k <= trailer_k:
             trailer.left = inserted_node
         else:
             trailer.right = inserted_node
     
-    def two_dim_search(self, sx, tx, sy, ty, node=None, depth=0):
+    def two_dim_search(self, sx: Num, tx: Num, sy: Num, ty: Num, node: Optional[TwoDimNode]=None, depth: int=0) -> List[Tuple[Num]]:
         """
         kD tree に対し閉区間 D = {(x, y) | sx<=x<=tx, sy<=y<=ty} 内に存在する点を探してリストにまとめて返す (対応する点の個数 k として O(√n + k))
         下記のように検索必要性を判断し再帰的に左右の子に対し探索を行えば良い
@@ -234,33 +137,35 @@ class TwoDimTree:
 
 
 
+
 if __name__ == "__main__":
     import random
-    print("\none dimentional kD tree")
-    tree_1 = OneDimTree()
-    L_1 = [random.randint(0, 20) for _ in range(15)]
-    print(L_1)
-    for x in L_1:
-        tree_1.insert(x)
-    tree_1.traverse()
-    print('')
-    for _ in range(5):
-        sx = random.randint(0, 20)
-        tx = random.randint(0, 20)
-        sx, tx = min(sx, tx), max(sx, tx)
-        print(f"range search {sx} ~ {tx}: {tree_1.one_dim_search(sx, tx)}")
 
-    print("\ntwo dimentional kD tree")
-    tree_2 = TwoDimTree()
-    L_2 = [(random.randint(0, 20), random.randint(0, 20)) for _ in range(10)]
-    print(L_2)
-    for x, y in L_2:
-        tree_2.insert(x, y)
-    tree_2.preorder_traverse()
-    print('')
-    for _ in range(5):
-        sx, tx, sy, ty = [random.randint(0, 20) for _ in range(4)]
-        sx, tx = min(sx, tx), max(sx, tx)
-        sy, ty = min(sy, ty), max(sy, ty)
-        print(f"range search ({sx},{sy}) ~ ({tx},{ty}): {tree_2.two_dim_search(sx, tx, sy, ty)}")
-    print(f"range search (0,0) ~ (20,20): {tree_2.two_dim_search(0, 20, 0, 20)}")
+    H = 1000
+    W = 1000
+    Iteration = 100
+
+    # 盤面形成を 100 回
+    for _ in range(Iteration):
+        # (0,0) ~ (1000,1000) グリッドに 1000 個点をばらまく
+        L_2 = [(random.randint(0, H), random.randint(0, W)) for _ in range(1000)]
+        # 平衡した kD tree 作成
+        tree_2 = TwoDimTree(L_2)
+        # 100 個レンジサーチクエリをランダム作成
+        query = []
+        for _ in range(100):
+            sx, tx = random.randint(0, H), random.randint(0, H)
+            sy, ty = random.randint(0, W), random.randint(0, W)
+            sx, tx = min(sx, tx), max(sx, tx)
+            sy, ty = min(sy, ty), max(sy, ty)
+            query.append((sx, tx, sy, ty))
+        # クエリへの答えが 100 個全てについて正しかったか確認
+        for sx, tx, sy, ty in query:
+            calculated_points = tree_2.two_dim_search(sx, tx, sy, ty)
+            ans_points = []
+            for i, j in L_2:
+                if sx <= i <= tx and sy <= j <= ty:
+                    ans_points.append((i, j))
+            assert (set(calculated_points) == set(ans_points))
+    
+    print(" * assertion test ok * ")

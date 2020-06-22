@@ -1,5 +1,5 @@
 """
-<Algorithm Introduction p..218-221>
+(参考) <Algorithm Introduction p.218-221>
 強連結成分分解 Strongly connected composition decomposision (O(N+M))
 
 有向グラフ G=(V,E) の任意の頂点 u,v について u~>v, v~>u なるパスが存在するときそのグラフは強連結である。
@@ -7,20 +7,24 @@
 強連結成分分解の結果、もとの有向グラフは DAG になる。
 
 
-algorithm
+<algorithm>
 DFS(G) を行い、帰りがけの順の順序をメモ
 その降順をもとに DFS(transpose(G)) を行う。各 DFS が停止するごとに強連結成分が生成される。生成される順は DAG のトポロジカル順となる。
 """
 
 
-def scc(graph, rgraph):
+from typing import Sequence, Set, List, Tuple
+
+def scc(graph: Sequence[Sequence[int]], rgraph: Sequence[Sequence[int]]) -> Tuple[int, List[int]]:
     """
     graph, rgraph をもとに強連結成分ごとのグルーピングを行う。
     グループ番号は 0 から始まり、その順が強連結成分分解後の DAG におけるトポロジカル順序を表す。
     グループ数、グループ番号を各頂点に対し記したリストを返す。
+
     Args:
         graph (list): 隣接リスト
         rgraph (list): 有向辺を逆に繋いだグラフの隣接リスト
+
     Returns:
         group_numbers (int): トータルのグループ (強連結成分) 数
         vertex_to_group_num (list): vertex_to_group_num[i] には i がどのグループ番号で表されるグループに属するかが int で入っているリスト
@@ -57,12 +61,16 @@ def scc(graph, rgraph):
     return cnt+1, vertex_to_group_num
             
     
-def contract_from_group(graph, group_num, vertex_to_group_num):
+
+def contract_from_group(graph: Sequence[Sequence[int]], group_num: int, vertex_to_group_num: List[int]) -> Tuple[List[Set[int]], List[List[int]]]:
     """
+    強連結成分のグルーピングをもとに頂点集合の DAG を作成する
+
     Args:
         graph (list): 隣接リスト
         group_num (int): トータルのグループ (強連結成分) 数
         vertex_to_group_num (list): vertex_to_group_num[i] には i がどのグループ番号で表されるグループに属するかが int で入っているリスト
+
     Returns:
         DAG (list): DAG[k] にはグループ番号 k から辺が伸びているグループの番号の set が入っているリスト
         strongly_connected (list): strongly_connected[k] にはグループ番号 k の強連結成分内の頂点のリストが入っているリスト

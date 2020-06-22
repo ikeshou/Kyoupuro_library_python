@@ -1,27 +1,37 @@
 """
-<Algorithm Introduction p.254-259>
-Dijkstra 法 O((E+V)lgV) (頂点を回るときに最小のものを取り出していくのに VlgV, cost の更新で ElgV)
-負辺を含まぬ重みつきグラフについて、ある頂点から他の頂点までの最短コストを貪欲に計算する
+<Algorithm Introduction vol.2 p.254-259>
+Dijkstra 法 
+負辺を含まぬ重みつきグラフについて単一始点最短距離を O((E+V)lgV) で計算する
+(頂点を回るときに最小のものを取り出していくのに VlgV, cost の更新で ElgV)
+
+<algorithm>
+距離が確定していない頂点のうち最短距離であるものを貪欲に選び距離を確定。その頂点から隣接に対し再び最短距離計算を行うことを繰り返す。
 """
 
+
 from heapq import heappush, heappop
+from typing import Sequence, List, Tuple, Union
+
+Num = Union[int, float]
+
+
 class PQueueMin:
     def __init__(self):
         self.pq = []    # 第一要素に cost、第二要素に ind が来る様にする
     
-    def push(self, ind, cost):
+    def is_empty(self) -> bool:
+        return len(self.pq)==0    
+
+    def push(self, ind: int, cost: Num):
         heappush(self.pq, [cost, ind])
     
-    def pop(self):
+    def pop(self) -> Tuple[int, int]:
         cost, ind = heappop(self.pq)
-        return [ind, cost]
-
-    def is_empty(self):
-        return len(self.pq)==0
+        return (ind, cost)
 
 
-
-def dijkstra(adj_with_weight, start=0):
+# verified @ABC035D, ABC051D
+def dijkstra(adj_with_weight: Sequence[Sequence[int]], start: int=0) -> List[Num]:
     """
     重みつき隣接リストを用いた Dijkstra 法 O((E+V)lgV) (頂点を回るときに最小のものを取り出していくのに VlgV, cost の更新で ElgV)
     負辺を含まぬ重みつきグラフについて、ある頂点から他の頂点までの最短コストを貪欲に計算する
@@ -45,12 +55,8 @@ def dijkstra(adj_with_weight, start=0):
 
 
 
-"""
-密なグラフの場合はこちらの方が軽いかも。
-重みつき隣接行列を用いる Dijkstra 法 (O(V^2))
-verified @ABC079D
-"""
-def min_ind_except_for_fixed(seq, fixed):
+
+def min_ind_except_for_fixed(seq: List[Num], fixed: List[bool]) -> int:
     m = float('inf')
     for i in range(len(seq)):
         if not fixed[i] and seq[i] < m:
@@ -58,7 +64,8 @@ def min_ind_except_for_fixed(seq, fixed):
     return min_ind
 
 
-def dijkstra_matrix(adj_matrix_weight, start):
+# verified @ABC022C, ABC079D
+def dijkstra_matrix(adj_matrix_weight: Sequence[Sequence[int]], start: int) -> List[int]:
     """
     重みつき隣接行列を用いた Dijkstra 法 O(V^2) (毎回全頂点を見て距離が確定してない奴らの中で最小となっているものを選ぶ)
     負辺を含まぬ重みつきグラフについて、ある頂点から他の頂点までの最短コストを貪欲に計算する
@@ -73,6 +80,9 @@ def dijkstra_matrix(adj_matrix_weight, start):
         for j in range(V):
             cost[j] = min(cost[j], cost[u] + adj_matrix_weight[u][j])
     return cost
+
+
+
 
 
 

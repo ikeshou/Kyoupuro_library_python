@@ -1,4 +1,5 @@
 """
+(参考) <Algorithm Introduction vol.2 p.173-190>
 互いに素なグラフのためのデータ構造 Union Find 木
 内部で基本的な操作 make_set, find_set, union をサポートする。トータルの操作 m, make_set の回数 n とする。
 rank による合併戦略と経路圧縮を用いると O(m * α(n)) となる。(α(n) はほぼ定数)
@@ -14,11 +15,15 @@ find_set: O(α(n))
 union:    O(α(n))
 is_same:  O(α(n))
 akin_num: O(1)
+
+
+verified @ABC040D, ABC065D, ABC074D, ABC097D, ABC120D, ...
 """
 
 
+
 class UnionFindTree:
-    def __init__(self, num_of_elm):
+    def __init__(self, num_of_elm: int):
         """
         0 ... num_of_elem - 1 まで数字で表される (0-index) グループを管理する union find tree を作成する (O(n))
         """
@@ -27,7 +32,7 @@ class UnionFindTree:
         self.rank = [0] * self.n    # root となる ind について rank[ind] はその木の深さを表す。それ以外の ind については意味を持たない。
         self.group_size = [1] * self.n    # root となる ind について group_size[ind] はそのグループに属するメンバの個数を表す。それ以外の ind については意味を持たない。
     
-    def _find_set(self, x):
+    def _find_set(self, x: int) -> int:
         """
         x の属するグループ番号を O(α(n)) で求める
         """
@@ -40,13 +45,13 @@ class UnionFindTree:
             self.table[x] = root
             return root
     
-    def is_same(self, x, y):
+    def is_same(self, x: int, y: int) -> bool:
         """
         x と y が同じグループに属するか O(α(n)) で判定する
         """
         return self._find_set(x) == self._find_set(y)
 
-    def union(self, x, y):
+    def union(self, x: int, y: int) -> bool:
         """
         x と y の属するグループを O(α(n)) で統合する
         """
@@ -66,14 +71,14 @@ class UnionFindTree:
                 self.rank[deep_root] += 1
             return True
 
-    def akin_num(self, x):
+    def akin_num(self, x: int) -> int:
         """
         x の属するグループのサイズを O(1) で計算する
         """
         x_root = self._find_set(x)
         return self.group_size[x_root]
 
-    def print_group_id(self):
+    def print_group_id(self) -> None:
         print([self._find_set(x) for x in self.table])
 
 

@@ -1,10 +1,12 @@
 """
-<Algorithm Introduction p.222-223>
+(参考) <Algorithm Introduction p.222-223>
 無向グラフについて DFS と lowlink を用いて橋と関節点を求める (O(V+E))
 
 橋 (bridge): 取り除くと連結成分が増える辺
 関節点 (articulation point): 取り除くと連結成分が増える頂点 (接続辺も取り除く)
 
+
+<algorithm>
 order[u] は頂点を訪れた順番
     DFS 木において根から葉の方向にかけて大きくなる
     必ず後退辺は order 大 -> order 小を結ぶ
@@ -12,12 +14,12 @@ lowlink[u] は u から 1. DFS 木の辺を根から葉へ 0 回以上進む 2. 
     u を根とする DFS 部分木において、後退辺による接続を許した時たどりつける一番根に近い頂点の order を表している
     lowlink によりサイクル検出が可能となる
 
-ある辺 uv が橋 ⇄ order(u) < lowlink(v)
+ある辺 uv が橋 <=> order(u) < lowlink(v)
     後退辺を無視した時 uv をカットすると v を根とする DFS 部分木 + 残りの DFS 部分木に分かれる
     v から u 側の DFS 部分木へ後退辺が伸びていれば uv は橋ではない
     lowlink(v) は v から後退辺による接続を許した時たどりつける一番根に近い頂点の order を表しているので、lowlink(v) <= order(u) なら後退辺接続されている
     故に order(u) < lowlink(v) で橋の判定が可能
-ある点 u (根以外) が関節点 ⇄ for any v adjacent to u order(u) <= lowlink(v)
+ある点 u (根以外) が関節点 <=> for any v adjacent to u order(u) <= lowlink(v)
     根の場合子供が複数いたら関節点
     それ以外の頂点の場合、子供 v が後退辺により u の先祖と接続していたら u を削除しても到達可能である
     全ての子供についてこれが成立していれば関節点
@@ -32,14 +34,17 @@ lowlink[u] は u から 1. DFS 木の辺を根から葉へ 0 回以上進む 2. 
 二重連結成分分解後は木構造となる。
 """
 
+from typing import Sequence, Set, List, Tuple
 
 
-def bridge_detect(adj, start=0):
+def bridge_detect(adj: Sequence[Sequence[int]], start: int=0) -> Tuple[List[List[int]], List[Set[int]]]:
     """
-    橋を検出する (O(V+E))
+    O(V+E) で橋を検出する
+
     Args:
         adj (list): 隣接リスト
         start (int): 開始頂点を示すインデックス
+
     Returns:
         bridge (list): 橋を示すリスト。edge(u, v) が橋である時 (u, v) がこのリストに追加される。u は DFS木において v の親に当たる。 (edge(v, u) は bridge に含まれない)
         cycle_graph (list): cycle_graph[i] には i と '直接つながる' 二重連結成分が set で入っているリスト
@@ -77,12 +82,14 @@ def bridge_detect(adj, start=0):
     return bridge, cycle_graph
     
 
-def articulation_detect(adj, start=0):
+def articulation_detect(adj: Sequence[Sequence[int]], start: int=0) -> List[int]:
     """
-    関節点を検出する (O(V+E))
+    O(V+E) で関節点を検出する
+
     Args:
         adj (list): 隣接リスト
         start (int): 開始頂点を示すインデックス
+
     Returns:
         articulation (list): 関節点である頂点のリスト
     """
@@ -116,12 +123,14 @@ def articulation_detect(adj, start=0):
     return articulation
 
 
-def contract_from_cycle(bridge, cycle_graph):
+def contract_from_cycle(bridge: List[List[int]], cycle_graph: List[Set[int]]) -> Tuple[List[int], List[List[int]]]:
     """
-    二重連結成分分解を行う (O(V+E))
+    O(V+E) で二重連結成分分解を行う
+
     Args:
         bridge (list): 橋を示すリスト。edge(u, v) が橋である時 (u, v) がこのリストに追加される
         cycle_graph (list): cycle_graph[i] には i と '直接つながる' 二重連結成分が set で入っているリスト
+        
     Returns:
         vertex_to_group_num (list): vertex_to_group_num[i] には i がどのグループ番号で表されるグループに属するかが int で入っているリスト
         bi_connected (list): 二重連結成分ごとにグルーピングを行った時、そのグループ番号で表現された隣接リスト

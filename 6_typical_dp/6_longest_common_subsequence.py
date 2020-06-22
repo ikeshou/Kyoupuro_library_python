@@ -1,4 +1,5 @@
 """
+<Algorithm Introduction vol.2 p.29>
 最長共通部分列問題 (Longest Common Subsequence, LCS)
 
 2 つの文字列の最長共通部分列およびその長さを計算する

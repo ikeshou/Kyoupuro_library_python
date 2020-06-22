@@ -1,8 +1,10 @@
 """
-<Algorithm Introduction p.282-288>
+<Algorithm Introduction vol.2 p.282-288>
 Warshall-Floyd 法 (O(V^3), 1 sec だと v~500 とかが限界)
 全点対間の最短経路を DP で求める
 
+
+<algorithm>
 3次元 DP
 dp[k+1][i][j] を 0...k, i, j なる頂点を使用できる時の i~j 最短距離とする (k+1=0 の時は e(i,j))
 dp[k+1][i][j] = min(dp[k][i][j], dp[k][i][k+1]+dp[k][k+1][j])
@@ -16,11 +18,17 @@ dp[k+1][i][k+1] = min(dp[k][i][k+1], dp[k][i][k+1] + dp[k][k+1][k+1] (=0)))
 同様に
 dp[k+1][k+1][j] = dp[k][k+1][j]
 つまり使い回しの結果 dp[k+1][i][k+1] がすでに dp[k][i][k+1] の参照場所を更新しようとしてしまっていても、実際に更新は行われない (値が等しいので)
+
+
+verified @ABC012D, ABC073D, ABC074D
 """
 
 
 from copy import deepcopy
-def warshall_floyd(adj_mat_with_weight):
+from typing import Sequence, List
+
+
+def warshall_floyd(adj_mat_with_weight: Sequence[Sequence[int]]) -> List[List[int]]:
     """
     Warshall-Floyd 法 (O(V^3), 1 sec だと v~500 とかが限界)
     全点対間の最短経路を三次元 DP で求める
