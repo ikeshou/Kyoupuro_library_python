@@ -2,6 +2,6 @@ language: python
 python:
     - 3.8
 install:
-    - pip install numpy, scipy, networkx
+    - pip install numpy scipy networkx
 script:
     - pytest
