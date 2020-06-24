@@ -11,9 +11,11 @@ Some of the libraries are verified by AOJ and AtCoder.
 ##  はじめに
 
 * 競技プログラミングの Python ライブラリです。
+* src 以下のライブラリコードは Python3.5 の標準ライブラリのみで動くはずです (多分)。tests 以下のテストコードは Python3.8, pytest, numpy, scipy, networkx が必要です。
 * 使用方法は各関数やクラスに記載された docstring を見ればわかるかと思います。アルゴリズムや実装の簡易的なメモはスクリプト冒頭に書いてあります。
 * 大体のライブラリはランダムケースを用いたブラックボックステストをパスしています。(ナイーブに解ける問題サイズにおいて愚直解と比較、サードパーティー製の scipy, networkx などの出力と比較など。)
 * 一部のライブラリは AOJ, AtCoder により verify ずみです。
+* （最大フローと赤黒木がお気に入り）
 
 <br>
 
@@ -21,7 +23,7 @@ Some of the libraries are verified by AOJ and AtCoder.
 * doctest を走らせる
 ```bash
 cd src/
-# module として試したいファイルを実行。以下は一例
+# module として試したいファイルを実行。実行で怒られが発生しなかったら成功。以下は一例
 python -m mypkg.string.rolling_hash
 ```
 * pytest を走らせる (テストコードでは python 3.8 以上かつ pytest, numpy, scipy, networkx が必要)
@@ -118,4 +120,4 @@ pytest [-v]
 
 
 ### 8. others
-- 稀によく書く (?) 関数たち
+- 稀によく書く (?) 関数たち (多次元版 flatten とか transpose とか)
