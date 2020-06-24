@@ -5,11 +5,33 @@ Useful and typical algorithms and data structures that are not covered with Pyth
 All of the libraries passed assertion test and doctest written in itself.
 Some of the libraries are verified by AOJ and AtCoder.
 
+<br>
 
-## 1. algorithms
+##  はじめに
+
+* 競技プログラミングの Python ライブラリです。
+* 使用方法は各関数やクラスに記載された docstring を見ればわかるかと思います。アルゴリズムや実装の簡易的なメモはスクリプト冒頭に書いてあります。
+* 大体のライブラリはランダムケースを用いたブラックボックステストをパスしています。(ナイーブに解ける問題サイズにおいて愚直解と比較、サードパーティー製の scipy, networkx などの出力と比較など。)
+* 一部のライブラリは AOJ, AtCoder により verify ずみです。
+
+
+## テストをするには
+* doctest を走らせる
+```bash
+cd src/
+# module として試したいファイルを実行。以下は一例
+python -m mypkg.string.rolling_hash
+```
+* pytest を走らせる (テストコードでは python 3.8 以上かつ pytest, numpy, scipy, networkx が必要)
+```bash
+cd tests/
+pytest [-v]
+```
+---
+
+### 1. algorithms
 - ソートに関連するアルゴリズムで有用なもの
   - STL の nth_element(), stable_partition()
-  - i 番目の順序統計量
   - 範囲指定が可能なクイックソート
   - 範囲指定が可能なマージソート
   - 反転数
@@ -17,8 +39,9 @@ Some of the libraries are verified by AOJ and AtCoder.
 - 整数問題に関係するアルゴリズムで有用なもの
   - 素数判定、約数列挙、エラトステネスの篩
   - ユークリッドの互除法
+  - modpow
   - 階乗、フィボナッチ数 (ジェネレータ)
-  - 階乗テーブル、階乗の逆元テーブル、剰余版コンビネーション
+  - 階乗テーブル、階乗の逆元テーブル、剰余版組み合わせ計算
 - 尺取り法
 - 累積和 (imos 法)
   - 一次元、二次元
@@ -27,7 +50,7 @@ Some of the libraries are verified by AOJ and AtCoder.
   - 一次元 (大小関係を保存、空白領域を保存)、二次元 (大小関係を保存、空白領域を保存)
 - 半分全列挙
 
-## 2. basic data structures
+### 2. basic data structures
 - 循環型双方向連結リスト
 - 優先度付きキュー
   - 最大優先度付きキュー、最小優先度付きキュー
@@ -35,7 +58,7 @@ Some of the libraries are verified by AOJ and AtCoder.
   - 削除が可能な優先度付きキュー
 - 赤黒木
 
-## 3. graphs
+### 3. graphs
 - 基本的な DFS, BFS を使用するアルゴリズムで有用なもの
   - DFS による全点探索と全経路探索 (再帰による実装、スタックによる実装)
   - BFS による全点探索と全経路探索
@@ -54,7 +77,7 @@ Some of the libraries are verified by AOJ and AtCoder.
   - 最大フロー (Ford-Fulkerson 法、Edmonds-Karp 法)
   - 二部グラフの最大マッチング
 
-## 4. advanced data structures
+### 4. advanced data structures
 - Union-Find Tree
 - kD Tree
 - 平方分割
@@ -63,14 +86,18 @@ Some of the libraries are verified by AOJ and AtCoder.
   - RMQ, RSQ, template for Segment Tree
   - Fenwick Tree
 
-## 5. geometry
+### 5. geometry
 - 回転、ノルム、偏角の差、内積、外積
 - ベクトルの直交判定、平行判定
 - 点の直線に対する射影、反射
 - 線分の交差判定、線分の交点、円と直線の共有点、円と円の共有点
 - 点と直線の距離、点と線分の距離、線分と線分の距離
 
-## 6. typical dp
+### 6. string
+- Rolling Hash
+- Trie Tree
+
+### 7. typical dp
 - ロッド切り出し問題
 - 連鎖行列積
 - ナップザック問題
@@ -84,7 +111,6 @@ Some of the libraries are verified by AOJ and AtCoder.
 - 巡回セールスマン問題 (TSP)
 - 行列累乗
 
-## 7. string
-- Rolling Hash
-- Trie Tree
 
+### 8. others
+- 稀によく書く (?) 関数たち
