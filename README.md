@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/ikeshou/Kyoupuro_library_python.svg?branch=master)](https://travis-ci.org/ikeshou/Kyoupuro_library_python)
 # Kyoupuro_library_python
 Python libraries for programming competition
 
@@ -14,6 +15,7 @@ Some of the libraries are verified by AOJ and AtCoder.
 * 大体のライブラリはランダムケースを用いたブラックボックステストをパスしています。(ナイーブに解ける問題サイズにおいて愚直解と比較、サードパーティー製の scipy, networkx などの出力と比較など。)
 * 一部のライブラリは AOJ, AtCoder により verify ずみです。
 
+<br>
 
 ## テストをするには
 * doctest を走らせる
@@ -27,6 +29,7 @@ python -m mypkg.string.rolling_hash
 cd tests/
 pytest [-v]
 ```
+
 ---
 
 ### 1. algorithms
