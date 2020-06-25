@@ -1,6 +1,6 @@
 import pytest
 from random import randint
-from mypkg.advanced_data_structures.range_search_kD_tree import TwoDimNode, TwoDimTree
+from mypkg.advanced_data_structures.kD_tree import TwoDimNode, TwoDimTree
 
 
 
