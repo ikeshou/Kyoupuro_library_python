@@ -57,6 +57,7 @@ pytest [-v]
   - 一次元 (大小関係を保存、空白領域を保存)、二次元 (大小関係を保存、空白領域を保存)
 - 半分全列挙
 
+
 ### 2. basic data structures
 - 循環型双方向連結リスト
 - 優先度付きキュー
@@ -64,6 +65,7 @@ pytest [-v]
   - 優先度の変更が可能な優先度付きキュー
   - 削除が可能な優先度付きキュー
 - 赤黒木
+
 
 ### 3. graphs
 - 基本的な DFS, BFS を使用するアルゴリズムで有用なもの
@@ -84,26 +86,31 @@ pytest [-v]
   - 最大フロー (Ford-Fulkerson 法、Edmonds-Karp 法)
   - 二部グラフの最大マッチング
 
+
 ### 4. advanced data structures
 - Union-Find Tree
 - kD Tree
 - 平方分割
-  - RSQ, RMQ, RAQ, RUQ, RAQ_RSQ
+  - (普通) RSQ, RMQ, RAQ
+  - (遅延伝播) RUQ, RAQ_RSQ
 - Fenwick Tree
   - RSQ
 - Segment Tree
   - RSQ, RMQ, template for Segment Tree
 
-### 5. geometry
+
+### 5. string
+- Rolling Hash
+- Trie Tree
+
+
+### 6. geometry
 - 回転、ノルム、偏角の差、内積、外積
 - ベクトルの直交判定、平行判定
 - 点の直線に対する射影、反射
 - 線分の交差判定、線分の交点、円と直線の共有点、円と円の共有点
 - 点と直線の距離、点と線分の距離、線分と線分の距離
 
-### 6. string
-- Rolling Hash
-- Trie Tree
 
 ### 7. typical dp
 - ロッド切り出し問題

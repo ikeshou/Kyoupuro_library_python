@@ -24,11 +24,16 @@ RAQ_RSQ: 区間に対する変更 (add)、区間に対する和
 """
 
 
+from typing import Sequence, Tuple, Union
+
+Num = Union[int, float]
+
+
 
 class BucketRSQ:
     """ 1 点に対する変更クエリ、区間に対する質問クエリ (Range Sum Query)"""
 
-    def __init__(self, total_size, chunk_size=512):
+    def __init__(self, total_size: int, chunk_size: int=512):
         if total_size < chunk_size:
             raise ValueError(f"BucketRSQ.__init__(): chunk size should be <= total_size. got total: {total_size}, chunk: {chunk_size}")
         self.size = total_size    # 列の長さ
@@ -38,25 +43,25 @@ class BucketRSQ:
         self.data = [0] * self.size
     
 
-    def _parent(self, data_ind):
+    def _parent(self, data_ind: int) -> int:
         """データインデックスからバケットのインデックスを得る"""
         return data_ind // self.chunk_size
     
-    def _child(self, bucket_ind):
+    def _child(self, bucket_ind: int) -> Tuple[int, int]:
         """バケットインデックスから管轄データのインデックス範囲 [l, r) を得る"""
         l = bucket_ind * self.chunk_size
         r = min((bucket_ind + 1) * self.chunk_size, self.size)
         return l, r
     
 
-    def build(self, L):
+    def build(self, L: Sequence[Num]) -> None:
         """ O(n) で初期配列 L に対応したバケットを構築する"""
         for i, num in enumerate(L):
             self.data[i] = num
             self.bucket_sum[self._parent(i)] += num
 
     
-    def update(self, i, x):
+    def update(self, i: int, x: Num) -> None:
         ' O(lgn) で L[i] を x に変更する'
         self.data[i] = x
         bucket_ind = self._parent(i)
@@ -66,7 +71,7 @@ class BucketRSQ:
             self.bucket_sum[bucket_ind] += self.data[i]
     
 
-    def sum(self, l, r):
+    def sum(self, l: int, r: int) -> Num:
         ' O(lgn) で [l,r) の区間和、つまり sumL[l:r] を計算する'
         if not (0 <= l <= r <= self.size):
             raise IndexError(f"Bucket_RSQ.sum(): invalid slices (0 <= l <= r <= {self.size} is required). got l: {l}, r: {r}")

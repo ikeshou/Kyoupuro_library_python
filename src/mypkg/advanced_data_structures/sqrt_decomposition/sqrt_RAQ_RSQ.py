@@ -24,22 +24,24 @@ RAQ_RSQ: 区間に対する変更 (add)、区間に対する和
 """
 
 
+
 from typing import Sequence, Tuple, Union
 
 Num = Union[int, float]
 
 
 
-class BucketRMQ:
-    """ 1 点に対する変更クエリ、区間に対する質問クエリ (Range Min Query)"""
+class BucketRAQ_RSQ:
+    """区間に対する加算クエリ、区間に対する質問クエリ (Range Add Query, Range Sum Query)"""
 
     def __init__(self, total_size: int, chunk_size: int=512):
         if total_size < chunk_size:
-            raise ValueError(f"BucketRMQ.__init__(): chunk size should be <= total_size. got total: {total_size}, chunk: {chunk_size}")
+            raise ValueError(f"BucketRAQ_RSQ.__init__(): chunk size should be <= total_size. got total: {total_size}, chunk: {chunk_size}")
         self.size = total_size    # 列の長さ
         self.chunk_size = chunk_size    # 何個ごとに bucket として分割されるか
         self.chunk_num = (total_size + chunk_size - 1) // chunk_size    # bucket の個数
-        self.bucket_min = [float('inf')] * self.chunk_num
+        self.bucket_add = [0] * self.chunk_num
+        self.bucket_sum = [0] * self.chunk_num   # どんな操作後だろうと常に self.data の対象区間の和と一致する気持ちが大切 (add が省略されて本当の区間和とは異なることはあるが)
         self.data = [0] * self.size
     
 
@@ -53,29 +55,18 @@ class BucketRMQ:
         r = min((bucket_ind + 1) * self.chunk_size, self.size)
         return l, r
     
-
+    
     def build(self, L: Sequence[Num]) -> None:
         """ O(n) で初期配列 L に対応したバケットを構築する"""
-        for i, num in enumerate(L):
+        for i, num in enumerate(L):        
             self.data[i] = num
-            self.bucket_min[self._parent(i)] = min(self.bucket_min[self._parent(i)], num)
+            self.bucket_sum[self._parent(i)] += num
     
 
-    def update(self, i: int, x: Num) -> None:
-        ' O(lgn) で L[i] を x に変更する'
-        self.data[i] = x
-        bucket_ind = self._parent(i)
-        l, r = self._child(bucket_ind)
-        self.bucket_min[bucket_ind] = float('inf')
-        for i in range(l, r):
-            self.bucket_min[bucket_ind] = min(self.bucket_min[bucket_ind], self.data[i])
-
-    
-    def min(self, l: int, r: int) -> Num:
-        ' O(lgn) で [l,r) の区間最小値、つまり min(L[l:r]) を計算する'
-        if not (0 <= l < r <= self.size):
-            raise IndexError(f"Bucket_RMQ.min(): invalid slices (0 <= l < r <= {self.size} is required). got l: {l}, r: {r}")
-        ans = float('inf')
+    def range_add(self, l: int, r: int, num: Num) -> None:
+        """ O(lgn) で [l,r) の区間に num を加算する"""
+        if not (0 <= l <= r <= self.size):
+            raise IndexError(f"Bucket_RAQ_RSQ.range_update(): invalid slices (0 <= l <= r <= {self.size} is required). got l: {l}, r: {r}")
         for bucket_ind in range(self.chunk_num):
             # 現在の bucket の管轄範囲は [i, j)
             i, j = self._child(bucket_ind)
@@ -85,10 +76,32 @@ class BucketRMQ:
                 continue
             # 対象区間が bucket を包み込んでいる時
             if l <= i and j <= r:
-                ans = min(ans, self.bucket_min[bucket_ind])
+                self.bucket_add[bucket_ind] += num
             # 部分的にかぶっている時、現在のバケットに含まれている対象区間の部分区間のみ計算する
             else:
                 for data_ind in range(max(l, i), min(r, j)):
-                    ans = min(ans, self.data[data_ind])
+                    self.data[data_ind] += num
+                    self.bucket_sum[self._parent(data_ind)] += num
+
+
+    def sum(self, l: int, r: int) -> Num:
+        """ O(lgn) で sum(L[l:r]) を得る"""
+        if not (0 <= l <= r <= self.size):
+            raise IndexError(f"Bucket_RAQ_RSQ.sum(): invalid slices (0 <= l <= r <= {self.size} is required). got l: {l}, r: {r}")
+        ans = 0
+        for bucket_ind in range(self.chunk_num):
+            # 現在の bucket の管轄範囲は [i, j)
+            i, j = self._child(bucket_ind)
+            if r <= i:
+                break
+            if j <= l:
+                continue
+            # 対象区間が bucket を包み込んでいる時
+            if l <= i and j <= r:
+                ans += self.bucket_sum[bucket_ind] + self.bucket_add[bucket_ind] * (j - i)    # * self.chunk_size はダメ。最後のバケットサイズは小さいことがある
+            # 部分的にかぶっている時、現在のバケットに含まれている対象区間の部分区間のみ計算する
+            else:
+                for data_ind in range(max(l, i), min(r, j)):
+                    ans += self.data[data_ind] + self.bucket_add[bucket_ind]
         return ans
 

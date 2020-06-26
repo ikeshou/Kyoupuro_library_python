@@ -24,11 +24,15 @@ RAQ_RSQ: 区間に対する変更 (add)、区間に対する和
 """
 
 
+from typing import Sequence, Tuple, Union
+
+Num = Union[int, float]
+
 
 class BucketRAQ:
     """ 1 点に対する質問クエリ、区間に対する加算クエリ (Range Add Query)"""
 
-    def __init__(self, total_size, chunk_size=512):
+    def __init__(self, total_size: int, chunk_size: int=512):
         if total_size < chunk_size:
             raise ValueError(f"BucketRAQ.__init__(): chunk size should be <= total_size. got total: {total_size}, chunk: {chunk_size}")
         self.size = total_size    # 列の長さ
@@ -38,25 +42,25 @@ class BucketRAQ:
         self.data = [0] * self.size
     
 
-    def _parent(self, data_ind):
+    def _parent(self, data_ind: int) -> int:
         """データインデックスからバケットのインデックスを得る"""
         return data_ind // self.chunk_size
     
-    def _child(self, bucket_ind):
+    def _child(self, bucket_ind: int) -> Tuple[int, int]:
         """バケットインデックスから管轄データのインデックス範囲 [l, r) を得る"""
         l = bucket_ind * self.chunk_size
         r = min((bucket_ind + 1) * self.chunk_size, self.size)
         return l, r
     
     
-    def build(self, L):
+    def build(self, L: Sequence[Num]) -> None:
         """ O(n) で初期配列 L に対応したバケットを構築する"""
         for i, num in enumerate(L):        
             self.data[i] = num
     
     
-    def range_add(self, l, r, num):
-        ' O(lgn) で [l,r) の区間に num を足す'
+    def range_add(self, l: int, r: int, num: Num) -> None:
+        """ O(lgn) で [l,r) の区間に num を足す"""
         if not (0 <= l <= r <= self.size):
             raise IndexError(f"Bucket_RAQ.range_add(): invalid slices (0 <= l <= r <= {self.size} is required). got l: {l}, r: {r}")
         for bucket_ind in range(self.chunk_num):
@@ -75,8 +79,8 @@ class BucketRAQ:
                     self.data[data_ind] += num
 
 
-    def get(self, i):
-        ' O(1) で L[i] を得る'
+    def get(self, i: int) -> Num:
+        """ O(1) で L[i] を得る"""
         return self.bucket_add[self._parent(i)] + self.data[i]
 
 

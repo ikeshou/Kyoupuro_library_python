@@ -30,15 +30,19 @@ Num = Union[int, float]
 
 
 
-class BucketRMQ:
-    """ 1 点に対する変更クエリ、区間に対する質問クエリ (Range Min Query)"""
+class BucketRMQ_RUQ:
+    """ 
+    区間に対する質問クエリ、区間に対する更新クエリ (Range Update Query)
+    更新クエリは操作が可換でないので遅延伝播が有効
+    """
 
     def __init__(self, total_size: int, chunk_size: int=512):
         if total_size < chunk_size:
-            raise ValueError(f"BucketRMQ.__init__(): chunk size should be <= total_size. got total: {total_size}, chunk: {chunk_size}")
+            raise ValueError(f"BucketRUQ.__init__(): chunk size should be <= total_size. got total: {total_size}, chunk: {chunk_size}")
         self.size = total_size    # 列の長さ
         self.chunk_size = chunk_size    # 何個ごとに bucket として分割されるか
         self.chunk_num = (total_size + chunk_size - 1) // chunk_size    # bucket の個数
+        self.bucket_lazy_update = [None] * self.chunk_num
         self.bucket_min = [float('inf')] * self.chunk_num
         self.data = [0] * self.size
     
@@ -53,28 +57,53 @@ class BucketRMQ:
         r = min((bucket_ind + 1) * self.chunk_size, self.size)
         return l, r
     
-
+    
     def build(self, L: Sequence[Num]) -> None:
         """ O(n) で初期配列 L に対応したバケットを構築する"""
-        for i, num in enumerate(L):
+        for i, num in enumerate(L):        
             self.data[i] = num
             self.bucket_min[self._parent(i)] = min(self.bucket_min[self._parent(i)], num)
     
 
-    def update(self, i: int, x: Num) -> None:
-        ' O(lgn) で L[i] を x に変更する'
-        self.data[i] = x
-        bucket_ind = self._parent(i)
-        l, r = self._child(bucket_ind)
-        self.bucket_min[bucket_ind] = float('inf')
-        for i in range(l, r):
-            self.bucket_min[bucket_ind] = min(self.bucket_min[bucket_ind], self.data[i])
+    def range_update(self, l: int, r: int, num: Num) -> None:
+        """ O(lgn) で [l,r) の区間を num に変更する"""
+        if not (0 <= l <= r <= self.size):
+            raise IndexError(f"Bucket_RMQ_RUQ.range_update(): invalid slices (0 <= l <= r <= {self.size} is required). got l: {l}, r: {r}")
+        for bucket_ind in range(self.chunk_num):
+            # 現在の bucket の管轄範囲は [i, j)
+            i, j = self._child(bucket_ind)
+            if r <= i:
+                break
+            if j <= l:
+                continue
+            # 対象区間が bucket を包み込んでいる時
+            if l <= i and j <= r:
+                self.bucket_lazy_update[bucket_ind] = num
+            # 部分的にかぶっている時、現在のバケットに含まれている対象区間の部分区間のみ計算する
+            else:
+                self._eval_lazy(bucket_ind)    # 先に伝播しておかないと下の更新がかき消されちゃう
+                for data_ind in range(max(l, i), min(r, j)):
+                    self.data[data_ind] = num
+                self.bucket_min[bucket_ind] = float('inf')
+                for data_ind in range(i, j):
+                    self.bucket_min[bucket_ind] = min(self.bucket_min[bucket_ind], self.data[data_ind])
 
-    
+
+    def _eval_lazy(self, bucket_ind: int) -> None:
+        """ O(lgn) で遅延伝播を行う """
+        lazy = self.bucket_lazy_update[bucket_ind]
+        if lazy is not None:
+            l, r = self._child(bucket_ind)
+            for data_ind in range(l, r):
+                self.data[data_ind] = lazy
+            self.bucket_min[bucket_ind] = lazy
+            self.bucket_lazy_update[bucket_ind] = None
+
+
     def min(self, l: int, r: int) -> Num:
-        ' O(lgn) で [l,r) の区間最小値、つまり min(L[l:r]) を計算する'
+        """ O(lgn) で [l,r) の区間最小値、つまり min(L[l:r]) を計算する"""
         if not (0 <= l < r <= self.size):
-            raise IndexError(f"Bucket_RMQ.min(): invalid slices (0 <= l < r <= {self.size} is required). got l: {l}, r: {r}")
+            raise IndexError(f"Bucket_RMQ_RUQ.min(): invalid slices (0 <= l < r <= {self.size} is required). got l: {l}, r: {r}")
         ans = float('inf')
         for bucket_ind in range(self.chunk_num):
             # 現在の bucket の管轄範囲は [i, j)
@@ -85,10 +114,16 @@ class BucketRMQ:
                 continue
             # 対象区間が bucket を包み込んでいる時
             if l <= i and j <= r:
-                ans = min(ans, self.bucket_min[bucket_ind])
+                lazy = self.bucket_lazy_update[bucket_ind]
+                if lazy is None:
+                    ans = min(ans, self.bucket_min[bucket_ind])
+                else:
+                    ans = min(ans, lazy)
             # 部分的にかぶっている時、現在のバケットに含まれている対象区間の部分区間のみ計算する
             else:
+                self._eval_lazy(bucket_ind)    # 先に伝播しておかないと下の更新がかき消されちゃう
                 for data_ind in range(max(l, i), min(r, j)):
                     ans = min(ans, self.data[data_ind])
         return ans
+
 

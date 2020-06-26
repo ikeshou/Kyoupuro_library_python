@@ -16,8 +16,8 @@ def test_BucketRMQ():
         rmq.min(-1, 50)    # invalid slices
         rmq.min(20, 20)    # also invalid slices (interval size == 0)
 
-    Iteration = 100
-    M = 10
+    Iteration = 50
+    M = 50
     for _ in range(Iteration):
         size = randint(1, M)
         chunk_size = randint(int(sqrt(size)), size)

@@ -24,69 +24,79 @@ RAQ_RSQ: 区間に対する変更 (add)、区間に対する和
 """
 
 
-import math
+from typing import Sequence, Tuple, Union
+
+Num = Union[int, float]
+
 
 
 class BucketRUQ:
-    '区間に対する変更クエリ、一点に対する質問クエリ (Range Update Query)'
-    def __init__(self, L):
-        self.size = len(L)
-        self.chunk = math.ceil(math.sqrt(self.size))    # 何個ごとに bucket として分割されるか。ceil を取っているのでこれだけ上位の箱を用意すれば十分
-        self.bucket_updated = [None] * self.chunk    # range_update のクエリに対し、bucket が完全に含まれているものに対してはここで記録を引き受ける
-        self.data = L
+    """ 
+    1 点に対する質問クエリ、区間に対する更新クエリ (Range Update Query)
+    更新クエリは操作が可換でないので遅延伝播が有効
+    """
+
+    def __init__(self, total_size: int, chunk_size: int=512):
+        if total_size < chunk_size:
+            raise ValueError(f"BucketRUQ.__init__(): chunk size should be <= total_size. got total: {total_size}, chunk: {chunk_size}")
+        self.size = total_size    # 列の長さ
+        self.chunk_size = chunk_size    # 何個ごとに bucket として分割されるか
+        self.chunk_num = (total_size + chunk_size - 1) // chunk_size    # bucket の個数
+        self.bucket_lazy_update = [None] * self.chunk_num
+        self.data = [0] * self.size
     
-    def _parent(self, data_ind):
-        return math.ceil((data_ind + 1) / self.chunk) - 1
+
+    def _parent(self, data_ind: int) -> int:
+        """データインデックスからバケットのインデックスを得る"""
+        return data_ind // self.chunk_size
     
-    def _child_left_close(self, bucket_ind):
-        return bucket_ind * self.chunk
+    def _child(self, bucket_ind: int) -> Tuple[int, int]:
+        """バケットインデックスから管轄データのインデックス範囲 [l, r) を得る"""
+        l = bucket_ind * self.chunk_size
+        r = min((bucket_ind + 1) * self.chunk_size, self.size)
+        return l, r
     
-    def _child_right_open(self, bucket_ind):
-        return min((bucket_ind + 1) * self.chunk, self.size)
     
-    def range_update(self, l, r, num):
-        '[l,r), つまり L[l],...,L[r-1] を num に変更する'
-        for bucket_ind in range(self.chunk):
-            # 現在の bucket の管轄範囲は [x, y)
-            x = self._child_left_close(bucket_ind)
-            y = self._child_right_open(bucket_ind)
-            if r <= x:
+    def build(self, L: Sequence[Num]) -> None:
+        """ O(n) で初期配列 L に対応したバケットを構築する"""
+        for i, num in enumerate(L):        
+            self.data[i] = num
+    
+
+    def range_update(self, l: int, r: int, num: Num) -> None:
+        """ O(lgn) で [l,r) の区間を num に変更する"""
+        if not (0 <= l <= r <= self.size):
+            raise IndexError(f"Bucket_RUQ.range_update(): invalid slices (0 <= l <= r <= {self.size} is required). got l: {l}, r: {r}")
+        for bucket_ind in range(self.chunk_num):
+            # 現在の bucket の管轄範囲は [i, j)
+            i, j = self._child(bucket_ind)
+            if r <= i:
                 break
-            if y <= l:
+            if j <= l:
                 continue
             # 対象区間が bucket を包み込んでいる時
-            if l <= x and y <= r:
-                self.bucket_updated[bucket_ind] = num
+            if l <= i and j <= r:
+                self.bucket_lazy_update[bucket_ind] = num
             # 部分的にかぶっている時、現在のバケットに含まれている対象区間の部分区間のみ計算する
             else:
-                # 先に updated の変更を伝播させて未処理の update は存在しないようにしておく (そうしないと過去の updated で今回の部分的な変更が上書きされちゃう)
-                key = self.bucket_updated[bucket_ind]
-                if key is not None:
-                    self.bucket_updated[bucket_ind] = None
-                    for data_ind in range(self._child_left_close(bucket_ind), self._child_right_open(bucket_ind)):
-                        self.data[data_ind] = key
-                for i in range(max(l, x), min(r, y)):
-                    self.data[i] = num
-    
-    def get(self, i):
-        'L[i] を得る'
-        return self.bucket_updated[self._parent(i)] if self.bucket_updated[self._parent(i)] else self.data[i]
+                self._eval_lazy(bucket_ind)    # 先に伝播しておかないと下の更新がかき消されちゃう
+                for data_ind in range(max(l, i), min(r, j)):
+                    self.data[data_ind] = num
 
 
-if __name__ == "__main__":
-    bucket_4 = BucketRUQ([0,0,0,0,0,0,0,0])    # 8 -> 3+3+2
-    assert(bucket_4.bucket_updated == [None,None,None])
-    bucket_4.range_update(0,4,1)
-    assert(bucket_4.bucket_updated == [1,None,None])
-    assert(bucket_4.data == [0,0,0,1,0,0,0,0])
-    bucket_4.range_update(3,7,2)
-    assert(bucket_4.bucket_updated == [1,2,None]) 
-    assert(bucket_4.data == [0,0,0,1,0,0,2,0])    # data[3] は 1 が残っているが updated の方に 2 が入っているので上書きされたも同然
-    assert(bucket_4.get(0) == 1)
-    assert(bucket_4.get(3) == 2)
-    assert(bucket_4.get(5) == 2)
-    bucket_4.range_update(1,9,3)
-    assert(bucket_4.bucket_updated == [None,3,3])    # 部分的にかぶっている部分の変更は予め伝播される
-    assert(bucket_4.data == [1,3,3,1,0,0,2,0])
-    assert(bucket_4.get(7) == 3)
-    print(" * assertion test ok *")
+    def _eval_lazy(self, bucket_ind: int) -> None:
+        """ O(lgn) で遅延伝播を行う """
+        lazy = self.bucket_lazy_update[bucket_ind]
+        if lazy is not None:
+            l, r = self._child(bucket_ind)
+            for data_ind in range(l, r):
+                self.data[data_ind] = lazy
+            self.bucket_lazy_update[bucket_ind] = None
+
+
+    def get(self, i: int) -> Num:
+        """ O(lgn) で L[i] を得る"""
+        bucket_ind = self._parent(i)
+        self._eval_lazy(bucket_ind)
+        return self.data[i]
+

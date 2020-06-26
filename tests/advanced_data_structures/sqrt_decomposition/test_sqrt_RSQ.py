@@ -15,8 +15,8 @@ def test_BucketRSQ():
         rsq = BucketRSQ(100, chunk_size=10)
         rsq.sum(-1, 50)    # invalid slices
 
-    Iteration = 100
-    M = 10
+    Iteration = 50
+    M = 50
     for _ in range(Iteration):
         size = randint(1, M)
         chunk_size = randint(int(sqrt(size)), size)
