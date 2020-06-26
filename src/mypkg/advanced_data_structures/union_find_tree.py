@@ -14,7 +14,7 @@ make_set: O(1)
 find_set: O(α(n))
 union:    O(α(n))
 is_same:  O(α(n))
-akin_num: O(1)
+akin_num: O(α(n))
 
 
 verified @ABC040D, ABC065D, ABC074D, ABC097D, ABC120D, ...
@@ -73,7 +73,7 @@ class UnionFindTree:
 
     def akin_num(self, x: int) -> int:
         """
-        x の属するグループのサイズを O(1) で計算する
+        x の属するグループのサイズを O(α(n)) で計算する
         """
         x_root = self._find_set(x)
         return self.group_size[x_root]
