@@ -49,7 +49,6 @@ def bellman(edges: Sequence[Edge], V: int, start: int=0) -> List[int]:
     start から全頂点までの最短コストを計算して返す。辿り着けぬ場合は inf が出力される。(O(V * E))
     負サイクルがある場合 NegativeCycleError があげられる
     """
-    # E = len(edges)
     cost = [float('inf')] * V
     cost[start] = 0
     updated = True

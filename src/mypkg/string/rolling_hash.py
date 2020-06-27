@@ -97,7 +97,7 @@ class RollingHash:
             raise ValueError(f'argument must be hashed_pattern (positive integer that is less than {self.hashmod}). got {hashed_pattern}')
         return hashed_pattern == self.calc_interval_hash(i, j)
     
-    def find_all(self, target_s: str) -> Iterator[Tuple[int]]:
+    def find_all(self, target_s: str) -> List[Tuple[int]]:
         """
         target_s と一致する [i,j) つまり s[i:j] を O(n) で探索する
 
@@ -109,7 +109,7 @@ class RollingHash:
         Args:
             target_s (str): s から一致する区間を探索したいターゲットパターン
         Returns:
-            iter: マッチした全ての s[i:j] について、 (i, j) のタプルを返すようなイテレータ
+            list: マッチした全ての s[i:j] について、 (i, j) のタプルを含むリスト
         """
         n = len(target_s)
         hashed_target_s = self.calc_str_hash(target_s)
@@ -117,7 +117,7 @@ class RollingHash:
         for i in range(self.size - n + 1):
             if self.match_predict_with_interval(hashed_target_s, i, i + n):
                 ans.append((i, i+n))
-        return iter(ans)
+        return ans
 
 
 

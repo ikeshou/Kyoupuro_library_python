@@ -53,7 +53,7 @@ def factorial_gen() -> Generator[int, int, None]:
 # ===== combination with mod =======
 # verified @ABC021D, ABC034C, ABC042D, ABC065C, ABC066D, ABC172E...
 class Combinatorics:
-    def __init__(self, size, mod):
+    def __init__(self, size: int, mod: int):
         """
         >>> c = Combinatorics(size=10, mod=10**9+7)
         >>> c.fact
@@ -66,7 +66,7 @@ class Combinatorics:
         self.fact = self._build_factorial(size, mod)
         self.inv = self._build_inv_factorial(size, mod)
     
-    def _build_factorial(self, size, mod):
+    def _build_factorial(self, size:int , mod: int) -> None:
         """
         fact_mod[i] は i! % mod を表すとする
         O(n) で fact_mod[size] まで計算結果がメモされたテーブルを構築して返す
@@ -76,7 +76,7 @@ class Combinatorics:
             fact[i] = (fact[i-1] * i) % mod
         return fact
     
-    def _build_inv_factorial(self, size, mod):
+    def _build_inv_factorial(self, size: int, mod: int) -> None:
         """
         inv_fact_mod[i] は 1/i! % mod を表すとする
         O(n+lgm) で inv_fact_mod[size] まで計算結果がメモされたテーブルを構築して返す
@@ -92,7 +92,7 @@ class Combinatorics:
             inv_fact_mod[i] = (inv_fact_mod[i+1] * (i+1)) % mod    # 1/(n-1)! = 1/n! * n
         return inv_fact_mod
     
-    def comb(self, n, r):
+    def comb(self, n: int, r: int) -> int:
         """
         nCr % mod を O(1) で計算する。
         Examples:

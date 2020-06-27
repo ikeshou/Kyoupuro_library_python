@@ -78,7 +78,7 @@ class UnionFindTree:
         x_root = self._find_set(x)
         return self.group_size[x_root]
 
-    def print_group_id(self) -> None:
-        print([self._find_set(x) for x in self.table])
+    def __str__(self) -> str:
+        return 'UFgroup(' + str([self._find_set(x) for x in self.table]) +')'
 
 

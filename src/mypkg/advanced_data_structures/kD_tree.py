@@ -30,6 +30,7 @@ class TwoDimNode:
         self.left = left
         self.right = right
 
+
 class TwoDimTree:
     def __init__(self, points: Sequence[Sequence[Num]]=[]):
         """
@@ -46,26 +47,13 @@ class TwoDimTree:
         # もし予め一次元の点の集合が与えられるのならバランスする形で kD tree を構築する
         self._balance_insert(points)
     
-    def preorder_traverse(self, node=None):
+    def preorder_traverse(self, node: Optional[TwoDimNode]=None):
         node = self.root if node is None else node
         if node != self.nil:
             print(f"({node.x},{node.y})", end=' ')
             self.preorder_traverse(node=node.left)
             self.preorder_traverse(node=node.right)
         
-    def postorder_traverse(self, node=None):
-        node = self.root if node is None else node
-        if node != self.nil:
-            self.preorder_traverse(node=node.left)
-            self.preorder_traverse(node=node.right)
-            print(f"({node.x},{node.y})", end=' ')
-
-    def inorder_traverse(self, node=None):
-        node = self.root if node is None else node
-        if node != self.nil:
-            self.preorder_traverse(node=node.left)
-            print(f"({node.x},{node.y})", end=' ')
-            self.preorder_traverse(node=node.right)
     
     def _balance_insert(self, seq: Sequence[Sequence[Num]], depth: int=0):
         # 毎回 x or y をキーとしてソートを行い、中央値をとって insert すれば平衡になる

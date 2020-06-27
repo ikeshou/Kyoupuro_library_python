@@ -161,9 +161,6 @@ class FordFulkerson:
                     if not visited[e.to] and e.capacity > 0:
                         q.append(e)
 
-
-            
-
     
     def _update_flow(self, path: List[Edge]) -> Num:
         """ Edge のリストである path において、最大フローを流し capacity を更新する。流したフローを返す。 """
