@@ -6,22 +6,19 @@ factorial_gen(n):
     O(n) (すでに計算済みのものは O(1))
     n! を求める
 
-make_factorial_table(n, m):
-    O(n)
-    0! ... n! (mod m) までの階乗の計算結果のテーブルを作る
 
-make_inv_factorial_table(n, m):
-    O(n + lg m)
-    1/0! ... 1/n! (modm) までの階乗の逆元の計算結果のテーブルを作る
+Combinatorics:
+    __init__(size, m):
+        O(n) で 0! ... n! (mod m) までの階乗の計算結果のテーブルを作り self.fact に保存
+        O(n + lgm) で 1/0! ... 1/n! (modm) までの階乗の逆元の計算結果のテーブルを作り self.inv に保存
+    comb(a, b):
+        O(1) で aCb (mod m) を計算する
 
-combination(n, r, m, fact_table, inv_fact_table=None):
-    O(lgm) (inv_fact_table を与えない場合、mod の階乗が繰返し二乗法の分だけかかる) or O(1) (与える場合)
-    nCr (mod m) を求める
 
 Pascal:
     __init__(n):
         O(n^2) で初期化、0C0 ... nCn までのパスカルの三角形を構築する
-    combination(a, b):
+    comb(a, b):
         O(1) で aCb を計算する
 """
 
@@ -54,83 +51,58 @@ def factorial_gen() -> Generator[int, int, None]:
 
 
 # ===== combination with mod =======
-# verified @ABC011D, ABC021D, ABC034C, ABC042D, ABC065C, ...
-def make_factorial_table(size: int, mod: int) -> List[int]:
-    """
-    fact_mod[i] は i! % mod を表すとする
-    O(n) で fact_mod[size] まで計算結果がメモされたテーブルを構築して返す
-
-    Args:
-        size, mod (int)
-    Returns:
-        list: fact_mod[i] は i! % mod を表す
-    Examples:
-        >>> make_factorial_table(10, 10**9+7)
+# verified @ABC021D, ABC034C, ABC042D, ABC065C, ABC066D, ABC172E...
+class Combinatorics:
+    def __init__(self, size, mod):
+        """
+        >>> c = Combinatorics(size=10, mod=10**9+7)
+        >>> c.fact
         [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800]
-    """
-    fact_mod = [1] * (size + 1)
-    for i in range(1, size + 1):
-        fact_mod[i] = (fact_mod[i - 1] * i) % mod
-    return fact_mod
-
-
-def make_inv_factorial_table(size: int, mod: int) -> List[int]:
-    """
-    inv_fact_mod[i] は 1/i! % mod を表すとする
-    O(n+lgm) で inv_fact_mod[size] まで計算結果がメモされたテーブルを構築して返す
-
-    Args:
-        size, mod (int)
-    Returns:
-        list: inv_fact_mod[i] は 1/i! % mod を表す
-    Examples:
-        >>> make_inv_factorial_table(10, 10**9+7)
+        >>> c.inv
         [1, 1, 500000004, 166666668, 41666667, 808333339, 301388891, 900198419, 487524805, 831947206, 283194722]
-    """
-    inv_fact_mod = [1] * (size + 1)
-    n_fact = 1
-    for i in range(2, size+1):
-        n_fact = (n_fact * i) % mod
-    inv_fact_mod[size] = pow(n_fact, mod-2, mod)    # a ^ p-2 ≡ 1/a (mod p) において a = n! とする。 1/n! (mod p) を求める
-    for i in range(size-1, -1, -1):
-        inv_fact_mod[i] = (inv_fact_mod[i+1] * (i+1)) % mod    # 1/(n-1)! = 1/n! * n
-    return inv_fact_mod
-
-
-# verified @ABC021D, ABC034C, ABC042D, ABC065C, ABC066D, ...
-def combination(n: int, r: int, mod: int, fact_table: List[int], inv_fact_table: List[int]=[]) -> int:
-    """
-    nCr % mod を逆元テーブルが与えられない場合繰返し二乗法により O(lgm) で計算する。与えられる場合 O(1) で計算する。
-
-    Args:
-        n, r, mod (int)
-        fact_table (list)
-        inv_fact_table (list)
+        """
+        self.size =  size
+        self.mod = mod
+        self.fact = self._build_factorial(size, mod)
+        self.inv = self._build_inv_factorial(size, mod)
     
-    Examples:
-        >>> m = 1000000007
-        >>> f_table = make_factorial_table(100, m)
-        >>> combination(10, 5, m, f_table)
-        252
-        >>> combination(100, 50, m, f_table)
-        538992043
-        >>> inv_f_table = make_inv_factorial_table(100, m)
-        >>> combination(100, 50, m, f_table, inv_f_table)
-        538992043
-
-    Note:
-        [フェルマーの小定理]
-        a ^ p-1 ≡ 1 (mod p)
-        a ^ p-2 ≡ 1/a (mod p) (逆元)
-        nCr = (n!) / ((n-r)! * r!) だが、mod p の世界ではこの分母を逆元を用いて計算しておくことが可能
-    """
-    numerator = fact_table[n]
-    if not inv_fact_table:
-        # pow はすでに繰り返し二乗法で効率的に実装されている
-        denominator = pow((fact_table[n-r] * fact_table[r]) % mod, mod-2, mod)
-    else:
-        denominator = (inv_fact_table[n-r] * inv_fact_table[r]) % mod
-    return (numerator * denominator) % mod
+    def _build_factorial(self, size, mod):
+        """
+        fact_mod[i] は i! % mod を表すとする
+        O(n) で fact_mod[size] まで計算結果がメモされたテーブルを構築して返す
+        """
+        fact = [1] * (size + 1)
+        for i in range(1, size + 1):
+            fact[i] = (fact[i-1] * i) % mod
+        return fact
+    
+    def _build_inv_factorial(self, size, mod):
+        """
+        inv_fact_mod[i] は 1/i! % mod を表すとする
+        O(n+lgm) で inv_fact_mod[size] まで計算結果がメモされたテーブルを構築して返す
+        Note:
+            [フェルマーの小定理]
+            a ^ p-1 ≡ 1 (mod p)
+            a ^ p-2 ≡ 1/a (mod p) (逆元)
+            nCr = (n!) / ((n-r)! * r!) だが、mod p の世界ではこの分母を逆元を用いて計算しておくことが可能
+        """
+        inv_fact_mod = [1] * (size + 1)
+        inv_fact_mod[size] = pow(self.fact[size], mod-2, mod)    # a ^ p-2 ≡ 1/a (mod p) において a = n! とする。 1/n! (mod p) を求める
+        for i in range(size-1, -1, -1):
+            inv_fact_mod[i] = (inv_fact_mod[i+1] * (i+1)) % mod    # 1/(n-1)! = 1/n! * n
+        return inv_fact_mod
+    
+    def comb(self, n, r):
+        """
+        nCr % mod を O(1) で計算する。
+        Examples:
+            >>> c = Combinatorics(size=100, mod=10**9+7)
+            >>> c.comb(100, 50)
+            538992043   
+        """
+        numerator = self.fact[n]
+        denominator = (self.inv[n-r] * self.inv[r]) % self.mod
+        return (numerator * denominator) % self.mod
 # ==================================    
 
 
