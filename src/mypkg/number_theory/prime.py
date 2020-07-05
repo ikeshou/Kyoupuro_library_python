@@ -121,27 +121,24 @@ class Eratos:
         """
         if num < 1:
             raise ValueError(f"Eratos.prime_factorize(): argument shoule be >= 1. got {num}")
-        if (self.table_max + 1) ** 2 < num:
+        if (self.table_max + 1) ** 2 <= num:
             raise ValueError('Eratos.prime_factorize(): exceed prime table size. got {}'.format(num))
         # 素因数分解の結果を記録する辞書        
         factorized_dict = dict()
-        candidate_prime_numbers = []
-        i = 2 
-        while i ** 2 <= num:
-            if self.is_prime(i):
-                candidate_prime_numbers.append(i)
-            i += 1
         # n について、√n 以下の素数で割り続けると最後には 1 or 素数となる
         # 背理法を考えれば自明 (残された数が √n より上の素数の積であると仮定。これは自明に n を超えるため矛盾)
-        for p in candidate_prime_numbers:
-            if num == 1:    # これ以上調査は無意味
+        i = 2
+        while i ** 2 <= num:
+            if num == 1:
+                # これ以上調査は無意味
                 break
-            if num % p == 0:
+            if self.is_prime(i) and num % i == 0:
                 cnt = 0
-                while num % p == 0:
-                    num //= p
+                while num % i == 0:
+                    num //= i
                     cnt += 1
-                factorized_dict[p] = cnt
+                factorized_dict[i] = cnt
+            i += 1
         if num != 1:
             factorized_dict[num] = 1
         return factorized_dict
