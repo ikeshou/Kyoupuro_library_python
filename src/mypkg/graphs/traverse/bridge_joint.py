@@ -146,7 +146,7 @@ def contract_from_cycle(bridge: List[List[int]], cycle_graph: List[Set[int]]) ->
             if not visited[v]:
                 dfs(v, group_num)
     # 実際に二重連結成分単位でグルーピング
-    cnt = -1
+    cnt = -1 
     for u in range(n):
         if not visited[u]:
             cnt += 1
