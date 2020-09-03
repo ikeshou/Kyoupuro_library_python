@@ -21,6 +21,8 @@ pop_task():
 
 import itertools
 from heapq import heappush, heappop
+from heapq import _heappop_max, _siftdown_max
+def _heappush_max(h, item): h.append(item); _siftdown_max(h, 0, len(h)-1)
 from typing import Any, Union
 
 Num = Union[int, float]
@@ -70,13 +72,13 @@ class PQueueMax:
     
     def add_task(self, task: Any, priority: Num) -> None:
         count = next(self.counter)
-        entry = (-priority, count, task)    # priority の符号を反転。counter は正負反転しない。後に追加される方が値が大きくなり min heap に挿入する上で不利になっている。
-        heappush(self.pq, entry)
+        entry = (priority, count, task)
+        _heappush_max(self.pq, entry)
 
     def pop_task(self) -> Any:
         if self.empty():
             raise KeyError(f"PQueueMax.pop_task(): pqueue is empty.")
-        priority, _, task = heappop(self.pq)
-        return (task, -priority)    # 符号を直す
+        priority, _, task = _heappop_max(self.pq)
+        return (task, priority)
 
 

@@ -30,7 +30,7 @@ def test_pqueue_max_handmade():
     for elm in L:
         Q.add_task(elm, randint(1, 100))
     assert not Q.empty()
-    tmp = list(map(lambda x: x[2], sorted(Q.pq)))    # すでに priority は負になっている
+    tmp = list(map(lambda x: x[2], sorted(Q.pq, reverse=True)))
     buf = []
     while not Q.empty():
         buf.append(Q.pop_task()[0])

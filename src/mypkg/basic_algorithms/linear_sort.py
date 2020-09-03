@@ -140,7 +140,3 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()
 
-
-    import random
-
-    # test for radix sort

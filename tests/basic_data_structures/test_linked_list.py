@@ -8,7 +8,7 @@ from mypkg.basic_data_structures.linked_list import Cell, LinkedList
 
 def test_linked_list_access():
     """
-    最大長さ M の linked list を Iteration 回作成し、アクセスメソッド front, back, nth が正しいかテストを行う
+    最大長さ M の linked list を Iteration 回作成し、アクセスメソッド front, back が正しいかテストを行う
     """
     ll = LinkedList()
     with pytest.raises(IndexError):
@@ -24,13 +24,11 @@ def test_linked_list_access():
         ll = LinkedList(L)
         assert ll.front().data == L[0]
         assert ll.back().data == L[-1]
-        for i in range(size):
-            assert ll.nth(i).data == L[i]
 
 
-def test_linked_list_empty_len_str_iter():
+def test_linked_list_empty_len_str_iter_getitem():
     """
-    最大長さ M の linked list を Iteration 回作成し、情報取得メソッド empty, __len__, __str__, __iter__ が正しいかテストを行う
+    最大長さ M の linked list を Iteration 回作成し、情報取得メソッド empty, __len__, __str__, __iter__, __getitem__ が正しいかテストを行う
     """ 
     ll = LinkedList()
     assert ll.empty() is True
@@ -50,6 +48,7 @@ def test_linked_list_empty_len_str_iter():
         assert str(ll) == str(L)
         for i, cell in enumerate(ll):
             assert cell.data == L[i]
+            assert ll[i].data == L[i]
 
 
 def test_linked_list_push_pop():
@@ -63,7 +62,7 @@ def test_linked_list_push_pop():
         dq = deque()
         ll = LinkedList()
         n = randint(0, M)
-        for i in range(n):
+        for _ in range(n):
             num = randint(-1000, 1000)
             if randint(0, 1) == 0:
                 ll.push_front(num)
@@ -73,7 +72,7 @@ def test_linked_list_push_pop():
                 dq.append(num)
             for j, cell in enumerate(ll):
                 assert cell.data == dq[j]
-        for i in range(n):
+        for _ in range(n):
             if randint(0, 1) == 0:
                 assert ll.pop_front().data == dq.popleft()
             else:
@@ -83,9 +82,9 @@ def test_linked_list_push_pop():
 
 
 
-def test_linked_list_count_find():
+def test_linked_list_count_find_remove():
     """
-    最大長さ M の linked list を Iteration 回作成し、検索メソッド count, find が正しいかテストを行う
+    最大長さ M の linked list を Iteration 回作成し、検索メソッド count, find, 検索削除メソッド remove が正しいかテストを行う
     毎回愚直にリストに対して処理した結果と同じになるか照合する。
     """
     ll = LinkedList([1, 2, 3, 4])
@@ -100,13 +99,23 @@ def test_linked_list_count_find():
         ll = LinkedList(L)
         for i in range(size):
             assert ll.count(L[i]) == L.count(L[i])
-            assert ll.find(L[i]) == ll.nth(L.index(L[i]))
+            assert ll.find(L[i]) == ll[L.index(L[i])]
+        val = randint(- 20, 20)    # あえて要素の値の範囲から外れ得るようにする
+        if val not in L:
+            with pytest.raises(ValueError):
+                ll.remove(val)
+        else:
+            ll.remove(val)
+            L.remove(val)
+        assert len(ll) == len(L)
+        for j, cell in enumerate(ll):
+            assert cell.data == L[j]
 
 
-def test_linkedlist_insert_ref_delete():
+def test_linkedlist_insert_ref_erase():
     """
     最大長さ M の linked list を Iteration 回作成し、参照指定挿入メソッド、参照指定削除メソッド
-    insert_previous_by_reference, insert_next_by_reference, delete が正しいかテストを行う
+    insert_prev_by_ref, insert_next_by_ref, erase が正しいかテストを行う
     毎回愚直にリストに対して処理した結果と同じになるか照合する。
     """
     Iteration = 100
@@ -115,26 +124,26 @@ def test_linkedlist_insert_ref_delete():
         size = randint(1, M)
         L = [randint(-10, 10) for _ in range(size)]
         ll = LinkedList(L)
-        # test for insert_next_by_reference
+        # test for insert_next_by_ref
         ind = randint(0, size - 1)
         num = randint(-1000, 1000)
         cell = ll.find(L[ind])
-        ll.insert_next_by_reference(cell, num)
+        ll.insert_next_by_ref(cell, num)
         L.insert(L.index(L[ind]) + 1, num)    # 後ろに挿入なので
         for j, cell in enumerate(ll):
             assert cell.data == L[j]
-        # test for insert_previous_by_reference
+        # test for insert_prev_by_ref
         ind = randint(0, size)    # サイズは 1 増えている。
         num = randint(-1000, 1000)
         cell = ll.find(L[ind])
-        ll.insert_previous_by_reference(cell, num)
+        ll.insert_prev_by_ref(cell, num)
         L.insert(L.index(L[ind]), num)
         for j, cell in enumerate(ll):
             assert cell.data == L[j]
-        # test for delete
+        # test for erase
         ind = randint(0, size + 1)   # サイズはさらに 1 増えている。
         cell = ll.find(L[ind])
-        ll.delete(cell)
+        ll.erase(cell)
         L.remove(L[ind])
         for j, cell in enumerate(ll):
             assert cell.data == L[j]        
@@ -157,7 +166,7 @@ def test_linked_list_insert_by_index():
         num = randint(-1000, 1000)
         L.insert(ind, num)
         ll.insert_by_index(ind, num)
-        assert ll.nth(ind).data == L[ind]
+        assert ll[ind].data == L[ind]
 
 
 def test_linked_list_rotate_reverse_rotate():
@@ -177,7 +186,9 @@ def test_linked_list_rotate_reverse_rotate():
         L = [randint(-1000, 1000) for _ in range(size)]
         ll = LinkedList(L)
         k = randint(0, M)    # 適当な回数 rotate
+        print(ll, k)
         ll.rotate(k)
+        print(ll)
         assert ll.front().data == L[k % size]
         assert ll.back().data == L[k % size - 1]
         ll.reverse_rotate(k)
