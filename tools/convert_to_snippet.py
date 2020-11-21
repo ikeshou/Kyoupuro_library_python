@@ -34,7 +34,7 @@ def count_head_space(s):
 
 
 if __name__ == "__main__":
-    line_num = int(input('input the line numbers: '))
+    line_num = int(input('input the total line numbers: '))
     L = read_all(line_num)
     print('')
     print('### now converting... ###')

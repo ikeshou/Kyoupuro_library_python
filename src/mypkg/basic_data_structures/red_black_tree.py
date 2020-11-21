@@ -448,7 +448,6 @@ class RedBlcakTree:
                     self._LR_rotate(parent)
                     parent.col = BLACK
                     assert(parent.p.l.col == BLACK)
-                    # parent.p.l.col = BLACK
                     parent.p.col = original_color_of_p
                 # 兄弟が黒、その兄弟の左の子は赤 case 2-3
                 elif parent.l.l.col == RED:

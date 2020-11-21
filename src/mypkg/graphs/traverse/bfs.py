@@ -7,11 +7,11 @@ Breadth First Search
 0-1 BFS では deque の特性を活かして重みが 0 なら deque の先頭に突っ込もう
 """
 
-
+from typing import List
 from collections import deque
 
 
-def bfs_queue_traverse(start: int) -> None:
+def bfs_queue_traverse(start: int, visited: List[bool]) -> None:
     """
     queue を用いた BFS で全頂点を訪問する。初期化に O(V) + 辺の探索に O(E) で O(V+E)
     訪問が目的なので「過去一度でもその頂点を訪問したか」を visited リストを用いて管理する。
@@ -76,7 +76,7 @@ if __name__ == "__main__":
                     (4,))
 
     visited = [False] * len(adjacent_list)
-    bfs_queue_traverse(0)
+    bfs_queue_traverse(0, visited)
     assert all(visited)
 
 
