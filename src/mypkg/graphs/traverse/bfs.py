@@ -11,7 +11,7 @@ from typing import List
 from collections import deque
 
 
-def bfs_queue_traverse(start: int, visited: List[bool]) -> None:
+def bfs_queue_traverse(start: int, adj: List[List[int]], visited: List[bool]) -> None:
     """
     queue を用いた BFS で全頂点を訪問する。初期化に O(V) + 辺の探索に O(E) で O(V+E)
     訪問が目的なので「過去一度でもその頂点を訪問したか」を visited リストを用いて管理する。
@@ -22,7 +22,7 @@ def bfs_queue_traverse(start: int, visited: List[bool]) -> None:
         u = q.popleft()
         if not visited[u]:    # start ~ u において最短パスが複数ある場合 q に u が複数回つまれうる。効率化のために visited チェックが必要。
             visited[u] = True
-            for v in adjacent_list[u]:
+            for v in adj[u]:
                 if not visited[v]:
                     q.append(v)
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
                     (4,))
 
     visited = [False] * len(adjacent_list)
-    bfs_queue_traverse(0, visited)
+    bfs_queue_traverse(0, adjacent_list, visited)
     assert all(visited)
 
 

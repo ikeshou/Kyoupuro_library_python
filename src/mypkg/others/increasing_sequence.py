@@ -18,8 +18,8 @@ def generate_increasing_seq(size: int, start: int, stop: int) -> Iterable[Tuple[
     
     Note:
         diff = stop - start
-        0 ... stop - 1 - diff で指定の数列を生成して最後に全てに diff を足せば良い
-        これは n = stop - 1 - diff として、n 個のボールと size 個の仕切りを並べた時に各仕切りの左側に存在するボールの個数と 1 対 1 対応する (n H size 通り存在) 
+        0 ... diff で指定の数列を生成して最後に全てに diff を足せば良い
+        これは diff 個のボールと size 個の仕切りを並べた時に各仕切りの左側に存在するボールの個数と 1 対 1 対応する (n H size 通り存在) 
     """
     return combinations_with_replacement(range(start, stop), r=size)
 
